@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: bank_raw
+    description: >
+      Raw OLTP tables loaded from the Kaggle synthetic banking dataset
+      (schema.sql + *_inserts.sql). No transformations applied.
+    schema: public
+    tables:
+      - name: customers
+      - name: accounts
+      - name: cards
+      - name: merchants
+      - name: branches
+      - name: loans
+      - name: transactions

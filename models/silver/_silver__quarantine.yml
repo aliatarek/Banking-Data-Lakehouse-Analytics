@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: silver__quarantine
+    description: >
+      Rows from any satellite where _is_valid = false, unioned across all
+      seven entities. Rebuilt in full on every run — reflects current
+      violations, not a historized log. Soft-fail: quarantine content
+      does not block the gold layer.
+    columns:
+      - name: source_table
+        description: Which source entity this row came from (customer, account, card, merchant, branch, loan, transaction).
+      - name: source_business_key
+        description: The natural business key of the offending row, recovered via the parent hub.
+      - name: hash_key
+        description: The satellite's parent hash key, for tracing back to the exact hub/satellite record.
+      - name: rejection_reason
+        description: Which validation rule(s) failed.
+      - name: load_dts
+        description: When the offending satellite row was loaded.

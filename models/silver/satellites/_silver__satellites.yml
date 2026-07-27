@@ -1,0 +1,253 @@
+version: 2
+
+models:
+  - name: silver__sat_customer
+    description: >
+      Descriptive attributes for hub_customer, historized via hash_diff.
+      Cleaning: INITCAP on first_name/last_name/city, LOWER on email.
+    columns:
+      - name: hk_customer
+        description: FK to silver__hub_customer, part of the composite PK.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver__hub_customer')
+                field: hk_customer
+      - name: load_dts
+        description: Timestamp this row was loaded, part of the composite PK.
+        tests:
+          - not_null
+      - name: first_name
+        description: Cleaned first name.
+      - name: last_name
+        description: Cleaned last name.
+      - name: email
+        description: Cleaned (lowercased) email.
+        tests:
+          - valid_email
+      - name: city
+        description: Cleaned city.
+      - name: credit_score
+        description: Credit score, as sourced (not imputed).
+        tests:
+          - in_range:
+              arguments:
+                min_value: 300
+                max_value: 850
+      - name: created_at
+        description: Customer creation timestamp, as sourced.
+        tests:
+          - not_in_future
+      - name: hash_diff
+        description: MD5 hash of all descriptive columns, used for change detection.
+      - name: _is_valid
+        description: >
+          False when email format, credit_score range, or created_at-not-in-future
+          checks fail. Nulls are not treated as failures.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__sat_account
+    description: Descriptive attributes for hub_account, historized via hash_diff.
+    columns:
+      - name: hk_account
+        description: FK to silver__hub_account, part of the composite PK.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver__hub_account')
+                field: hk_account
+      - name: load_dts
+        description: Timestamp this row was loaded, part of the composite PK.
+        tests:
+          - not_null
+      - name: account_type
+        description: Cleaned account type.
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Business', 'Checking', 'Savings']
+              config:
+                where: "account_type is not null"
+      - name: balance_usd
+        description: Account balance in USD, as sourced (not imputed).
+        tests:
+          - in_range:
+              arguments:
+                min_value: 0
+      - name: open_date
+        description: Account open date, as sourced.
+      - name: hash_diff
+        description: MD5 hash of all descriptive columns, used for change detection.
+      - name: _is_valid
+        description: >
+          False when balance_usd is negative or account_type is outside the
+          known set. Nulls are not treated as failures.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__sat_card
+    description: Descriptive attributes for hub_card, historized via hash_diff.
+    columns:
+      - name: hk_card
+        description: FK to silver__hub_card, part of the composite PK.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver__hub_card')
+                field: hk_card
+      - name: load_dts
+        description: Timestamp this row was loaded, part of the composite PK.
+        tests:
+          - not_null
+      - name: card_type
+        description: Cleaned card type.
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Credit', 'Debit']
+              config:
+                where: "card_type is not null"
+      - name: expiration_date
+        description: Card expiration date, as sourced.
+      - name: hash_diff
+        description: MD5 hash of all descriptive columns, used for change detection.
+      - name: _is_valid
+        description: False when card_type is outside the known set. Nulls are not treated as failures.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__sat_merchant
+    description: Descriptive attributes for hub_merchant, historized via hash_diff.
+    columns:
+      - name: hk_merchant
+        description: FK to silver__hub_merchant, part of the composite PK.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver__hub_merchant')
+                field: hk_merchant
+      - name: load_dts
+        description: Timestamp this row was loaded, part of the composite PK.
+        tests:
+          - not_null
+      - name: merchant_name
+        description: Cleaned merchant name.
+        tests:
+          - not_empty_string
+      - name: city
+        description: Cleaned city.
+      - name: hash_diff
+        description: MD5 hash of all descriptive columns, used for change detection.
+      - name: _is_valid
+        description: False when merchant_name is null or empty.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__sat_branch
+    description: >
+      Descriptive attributes for hub_branch, historized via hash_diff.
+      Carries city and country in addition to branch_name/manager_name,
+      since both are present on the source table.
+    columns:
+      - name: hk_branch
+        description: FK to silver__hub_branch, part of the composite PK.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver__hub_branch')
+                field: hk_branch
+      - name: load_dts
+        description: Timestamp this row was loaded, part of the composite PK.
+        tests:
+          - not_null
+      - name: branch_name
+        description: Cleaned branch name.
+        tests:
+          - not_empty_string
+      - name: manager_name
+        description: Cleaned manager name.
+      - name: city
+        description: Cleaned city.
+      - name: country
+        description: Trimmed country (not INITCAP'd, since values are acronyms like "USA").
+      - name: hash_diff
+        description: MD5 hash of all descriptive columns, used for change detection.
+      - name: _is_valid
+        description: False when branch_name is null or empty.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__sat_loan
+    description: Descriptive attributes for hub_loan, historized via hash_diff.
+    columns:
+      - name: hk_loan
+        description: FK to silver__hub_loan, part of the composite PK.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver__hub_loan')
+                field: hk_loan
+      - name: load_dts
+        description: Timestamp this row was loaded, part of the composite PK.
+        tests:
+          - not_null
+      - name: loan_amount
+        description: Loan principal amount, as sourced.
+        tests:
+          - positive_value
+      - name: interest_rate
+        description: Loan interest rate, as sourced.
+        tests:
+          - in_range:
+              arguments:
+                min_value: 0
+                max_value: 100
+      - name: start_date
+        description: Loan start date, as sourced.
+      - name: hash_diff
+        description: MD5 hash of all descriptive columns, used for change detection.
+      - name: _is_valid
+        description: >
+          False when loan_amount is not positive or interest_rate is outside
+          0-100. Nulls are not treated as failures.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__sat_transaction
+    description: Descriptive attributes for hub_transaction, historized via hash_diff.
+    columns:
+      - name: hk_transaction
+        description: FK to silver__hub_transaction, part of the composite PK.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver__hub_transaction')
+                field: hk_transaction
+      - name: load_dts
+        description: Timestamp this row was loaded, part of the composite PK.
+        tests:
+          - not_null
+      - name: amount_usd
+        description: Transaction amount in USD, as sourced.
+        tests:
+          - positive_value
+      - name: transaction_date
+        description: Transaction timestamp, as sourced.
+        tests:
+          - not_in_future
+      - name: hash_diff
+        description: MD5 hash of all descriptive columns, used for change detection.
+      - name: _is_valid
+        description: >
+          False when amount_usd is not positive or transaction_date is in
+          the future. Nulls are not treated as failures.
+      - name: rec_src
+        description: Source system identifier.

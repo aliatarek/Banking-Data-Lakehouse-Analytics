@@ -1,0 +1,137 @@
+version: 2
+
+models:
+  - name: silver__link_customer_account
+    description: Link between hub_customer and hub_account. Insert-only.
+    columns:
+      - name: hk_link_customer_account
+        description: Hash key, MD5(CONCAT(hk_customer, hk_account)).
+        tests:
+          - unique
+          - not_null
+      - name: hk_customer
+        description: FK to silver__hub_customer.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver__hub_customer')
+                field: hk_customer
+      - name: hk_account
+        description: FK to silver__hub_account.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver__hub_account')
+                field: hk_account
+      - name: load_dts
+        description: Timestamp this row was loaded into the link.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__link_account_card
+    description: Link between hub_account and hub_card. Insert-only.
+    columns:
+      - name: hk_link_account_card
+        description: Hash key, MD5(CONCAT(hk_account, hk_card)).
+        tests:
+          - unique
+          - not_null
+      - name: hk_account
+        description: FK to silver__hub_account.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver__hub_account')
+                field: hk_account
+      - name: hk_card
+        description: FK to silver__hub_card.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver__hub_card')
+                field: hk_card
+      - name: load_dts
+        description: Timestamp this row was loaded into the link.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__link_customer_loan
+    description: Link between hub_customer and hub_loan. Insert-only.
+    columns:
+      - name: hk_link_customer_loan
+        description: Hash key, MD5(CONCAT(hk_customer, hk_loan)).
+        tests:
+          - unique
+          - not_null
+      - name: hk_customer
+        description: FK to silver__hub_customer.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver__hub_customer')
+                field: hk_customer
+      - name: hk_loan
+        description: FK to silver__hub_loan.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver__hub_loan')
+                field: hk_loan
+      - name: load_dts
+        description: Timestamp this row was loaded into the link.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__link_account_transaction
+    description: Link between hub_account and hub_transaction. Insert-only.
+    columns:
+      - name: hk_link_account_transaction
+        description: Hash key, MD5(CONCAT(hk_account, hk_transaction)).
+        tests:
+          - unique
+          - not_null
+      - name: hk_account
+        description: FK to silver__hub_account.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver__hub_account')
+                field: hk_account
+      - name: hk_transaction
+        description: FK to silver__hub_transaction.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver__hub_transaction')
+                field: hk_transaction
+      - name: load_dts
+        description: Timestamp this row was loaded into the link.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__link_merchant_transaction
+    description: Link between hub_merchant and hub_transaction. Insert-only.
+    columns:
+      - name: hk_link_merchant_transaction
+        description: Hash key, MD5(CONCAT(hk_merchant, hk_transaction)).
+        tests:
+          - unique
+          - not_null
+      - name: hk_merchant
+        description: FK to silver__hub_merchant.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver__hub_merchant')
+                field: hk_merchant
+      - name: hk_transaction
+        description: FK to silver__hub_transaction.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver__hub_transaction')
+                field: hk_transaction
+      - name: load_dts
+        description: Timestamp this row was loaded into the link.
+      - name: rec_src
+        description: Source system identifier.

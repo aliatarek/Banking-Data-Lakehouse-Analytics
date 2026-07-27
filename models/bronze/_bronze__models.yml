@@ -1,0 +1,150 @@
+version: 2
+
+models:
+  - name: bronze__customers
+    description: 1:1 passthrough of raw customer records. No cleaning or transformation.
+    columns:
+      - name: customer_id
+        description: Natural key for a customer.
+        tests:
+          - unique
+          - not_null
+      - name: first_name
+        description: Customer first name, as sourced.
+      - name: last_name
+        description: Customer last name, as sourced.
+      - name: email
+        description: Customer email, as sourced.
+      - name: city
+        description: Customer city, as sourced.
+      - name: credit_score
+        description: Customer credit score, as sourced.
+      - name: created_at
+        description: Timestamp the customer record was created in the source system.
+      - name: _loaded_at
+        description: Timestamp this row was loaded into bronze.
+      - name: _source
+        description: Source system identifier.
+
+  - name: bronze__accounts
+    description: 1:1 passthrough of raw account records. No cleaning or transformation.
+    columns:
+      - name: account_id
+        description: Natural key for an account.
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Owning customer's natural key.
+      - name: account_type
+        description: Account type, as sourced.
+      - name: balance_usd
+        description: Account balance in USD, as sourced.
+      - name: open_date
+        description: Date the account was opened.
+      - name: _loaded_at
+        description: Timestamp this row was loaded into bronze.
+      - name: _source
+        description: Source system identifier.
+
+  - name: bronze__cards
+    description: 1:1 passthrough of raw card records. No cleaning or transformation.
+    columns:
+      - name: card_id
+        description: Natural key for a card.
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        description: Associated account's natural key.
+      - name: card_type
+        description: Card type, as sourced.
+      - name: expiration_date
+        description: Card expiration date.
+      - name: _loaded_at
+        description: Timestamp this row was loaded into bronze.
+      - name: _source
+        description: Source system identifier.
+
+  - name: bronze__merchants
+    description: 1:1 passthrough of raw merchant records. No cleaning or transformation.
+    columns:
+      - name: merchant_id
+        description: Natural key for a merchant.
+        tests:
+          - unique
+          - not_null
+      - name: merchant_name
+        description: Merchant name, as sourced.
+      - name: city
+        description: Merchant city, as sourced.
+      - name: _loaded_at
+        description: Timestamp this row was loaded into bronze.
+      - name: _source
+        description: Source system identifier.
+
+  - name: bronze__branches
+    description: >
+      1:1 passthrough of raw branch records. No cleaning or transformation.
+      Branches is an orphan dimension in this dataset — no FK links it to
+      accounts or transactions.
+    columns:
+      - name: branch_id
+        description: Natural key for a branch.
+        tests:
+          - unique
+          - not_null
+      - name: branch_name
+        description: Branch name, as sourced.
+      - name: manager_name
+        description: Branch manager name, as sourced.
+      - name: city
+        description: Branch city, as sourced.
+      - name: country
+        description: Branch country, as sourced.
+      - name: _loaded_at
+        description: Timestamp this row was loaded into bronze.
+      - name: _source
+        description: Source system identifier.
+
+  - name: bronze__loans
+    description: 1:1 passthrough of raw loan records. No cleaning or transformation.
+    columns:
+      - name: loan_id
+        description: Natural key for a loan.
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Borrowing customer's natural key.
+      - name: loan_amount
+        description: Loan principal amount, as sourced.
+      - name: interest_rate
+        description: Loan interest rate, as sourced.
+      - name: start_date
+        description: Loan start date.
+      - name: _loaded_at
+        description: Timestamp this row was loaded into bronze.
+      - name: _source
+        description: Source system identifier.
+
+  - name: bronze__transactions
+    description: 1:1 passthrough of raw transaction records. No cleaning or transformation.
+    columns:
+      - name: transaction_id
+        description: Natural key for a transaction.
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        description: Associated account's natural key.
+      - name: merchant_id
+        description: Associated merchant's natural key.
+      - name: amount_usd
+        description: Transaction amount in USD, as sourced.
+      - name: transaction_date
+        description: Timestamp the transaction occurred.
+      - name: _loaded_at
+        description: Timestamp this row was loaded into bronze.
+      - name: _source
+        description: Source system identifier.

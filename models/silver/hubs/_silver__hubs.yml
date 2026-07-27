@@ -1,0 +1,130 @@
+version: 2
+
+models:
+  - name: silver__hub_customer
+    description: Hub for the customer business entity. Insert-only, deduped on customer_id.
+    columns:
+      - name: hk_customer
+        description: Hash key, MD5(UPPER(TRIM(customer_id))).
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Natural business key from bronze__customers.
+        tests:
+          - unique
+          - not_null
+      - name: load_dts
+        description: Timestamp this row was loaded into the hub.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__hub_account
+    description: Hub for the account business entity. Insert-only, deduped on account_id.
+    columns:
+      - name: hk_account
+        description: Hash key, MD5(UPPER(TRIM(account_id))).
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        description: Natural business key from bronze__accounts.
+        tests:
+          - unique
+          - not_null
+      - name: load_dts
+        description: Timestamp this row was loaded into the hub.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__hub_card
+    description: Hub for the card business entity. Insert-only, deduped on card_id.
+    columns:
+      - name: hk_card
+        description: Hash key, MD5(UPPER(TRIM(card_id))).
+        tests:
+          - unique
+          - not_null
+      - name: card_id
+        description: Natural business key from bronze__cards.
+        tests:
+          - unique
+          - not_null
+      - name: load_dts
+        description: Timestamp this row was loaded into the hub.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__hub_merchant
+    description: Hub for the merchant business entity. Insert-only, deduped on merchant_id.
+    columns:
+      - name: hk_merchant
+        description: Hash key, MD5(UPPER(TRIM(merchant_id))).
+        tests:
+          - unique
+          - not_null
+      - name: merchant_id
+        description: Natural business key from bronze__merchants.
+        tests:
+          - unique
+          - not_null
+      - name: load_dts
+        description: Timestamp this row was loaded into the hub.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__hub_branch
+    description: >
+      Hub for the branch business entity. Insert-only, deduped on branch_id.
+      Orphan dimension — no link connects it to other hubs.
+    columns:
+      - name: hk_branch
+        description: Hash key, MD5(UPPER(TRIM(branch_id))).
+        tests:
+          - unique
+          - not_null
+      - name: branch_id
+        description: Natural business key from bronze__branches.
+        tests:
+          - unique
+          - not_null
+      - name: load_dts
+        description: Timestamp this row was loaded into the hub.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__hub_loan
+    description: Hub for the loan business entity. Insert-only, deduped on loan_id.
+    columns:
+      - name: hk_loan
+        description: Hash key, MD5(UPPER(TRIM(loan_id))).
+        tests:
+          - unique
+          - not_null
+      - name: loan_id
+        description: Natural business key from bronze__loans.
+        tests:
+          - unique
+          - not_null
+      - name: load_dts
+        description: Timestamp this row was loaded into the hub.
+      - name: rec_src
+        description: Source system identifier.
+
+  - name: silver__hub_transaction
+    description: Hub for the transaction business entity. Insert-only, deduped on transaction_id.
+    columns:
+      - name: hk_transaction
+        description: Hash key, MD5(UPPER(TRIM(transaction_id))).
+        tests:
+          - unique
+          - not_null
+      - name: transaction_id
+        description: Natural business key from bronze__transactions.
+        tests:
+          - unique
+          - not_null
+      - name: load_dts
+        description: Timestamp this row was loaded into the hub.
+      - name: rec_src
+        description: Source system identifier.
