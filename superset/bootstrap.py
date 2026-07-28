@@ -1,5 +1,5 @@
-"""Idempotent first-boot setup: registers the Gold Postgres connection, the
-Gold datasets, and a small starter dashboard. Safe to re-run on every
+"""Idempotent first-boot setup: registers the Railway Postgres connection, the
+Reporting-layer datasets, and a small starter dashboard. Safe to re-run on every
 container start — every step checks for an existing row before creating one.
 """
 
@@ -54,20 +54,20 @@ def get_or_create_database(db_session, Database):
     return database
 
 
-def get_or_create_dataset(db_session, SqlaTable, database, table_name: str):
+def get_or_create_dataset(db_session, SqlaTable, database, table_name: str, schema: str = "reporting"):
     dataset = (
         db_session.query(SqlaTable)
-        .filter_by(table_name=table_name, schema="gold", database_id=database.id)
+        .filter_by(table_name=table_name, schema=schema, database_id=database.id)
         .first()
     )
     if dataset:
         return dataset
-    dataset = SqlaTable(table_name=table_name, schema="gold", database=database)
+    dataset = SqlaTable(table_name=table_name, schema=schema, database=database)
     db_session.add(dataset)
     db_session.commit()
     dataset.fetch_metadata()
     db_session.commit()
-    logger.info("Created dataset: gold.%s", table_name)
+    logger.info("Created dataset: %s.%s", schema, table_name)
     return dataset
 
 
@@ -151,34 +151,35 @@ def bootstrap_assets() -> None:
 
         database = get_or_create_database(db_session, Database)
 
-        daily_txn = get_or_create_dataset(db_session, SqlaTable, database, "gold__kpi_daily_transactions")
-        customer_summary = get_or_create_dataset(db_session, SqlaTable, database, "gold__kpi_customer_summary")
+        customer_kpis = get_or_create_dataset(db_session, SqlaTable, database, "reporting__customer_kpis")
+        monthly_txn = get_or_create_dataset(db_session, SqlaTable, database, "reporting__transaction_monthly_summary")
+        balance_summary = get_or_create_dataset(db_session, SqlaTable, database, "reporting__customer_balance_summary")
 
-        total_amount_metric = {
+        total_volume_metric = {
             "expressionType": "SIMPLE",
-            "column": {"column_name": "total_amount_usd"},
+            "column": {"column_name": "total_transaction_volume_usd"},
             "aggregate": "SUM",
-            "label": "Total Amount (USD)",
+            "label": "Total Transaction Volume (USD)",
         }
 
         chart_total = get_or_create_chart(
             db_session,
             Slice,
             "Total Transaction Amount",
-            daily_txn,
+            customer_kpis,
             "big_number_total",
-            {"metric": total_amount_metric, "adhoc_filters": [], "time_range": "No filter"},
+            {"metric": total_volume_metric, "adhoc_filters": [], "time_range": "No filter"},
         )
 
-        chart_daily = get_or_create_chart(
+        chart_monthly = get_or_create_chart(
             db_session,
             Slice,
-            "Daily Transaction Volume",
-            daily_txn,
+            "Monthly Transaction Volume",
+            monthly_txn,
             "echarts_timeseries_line",
             {
-                "x_axis": "date_key",
-                "metrics": [total_amount_metric],
+                "x_axis": "transaction_month",
+                "metrics": [total_volume_metric],
                 "groupby": [],
                 "adhoc_filters": [],
                 "time_range": "No filter",
@@ -190,18 +191,19 @@ def bootstrap_assets() -> None:
             db_session,
             Slice,
             "Top Customers by Balance",
-            customer_summary,
+            balance_summary,
             "table",
             {
                 "query_mode": "raw",
-                "columns": ["customer_id", "first_name", "last_name", "city", "total_balance"],
+                "columns": ["customer_id", "first_name", "last_name", "city", "total_balance_usd"],
+                "order_by_cols": ['["balance_rank", true]'],
                 "row_limit": 10,
                 "adhoc_filters": [],
                 "time_range": "No filter",
             },
         )
 
-        get_or_create_dashboard(db_session, Dashboard, [chart_total, chart_daily, chart_top_customers])
+        get_or_create_dashboard(db_session, Dashboard, [chart_total, chart_monthly, chart_top_customers])
 
 
 if __name__ == "__main__":
