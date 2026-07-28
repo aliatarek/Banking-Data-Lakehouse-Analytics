@@ -1,0 +1,118 @@
+version: 2
+
+models:
+  - name: gold__fact_transactions
+    description: One row per transaction.
+    columns:
+      - name: transaction_hub_key
+        description: Grain key / transaction identifier.
+        tests:
+          - unique
+          - not_null
+      - name: account_hub_key
+        description: FK to dim_account (use with is_current).
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('gold__dim_account')
+                field: account_hub_key
+      - name: merchant_hub_key
+        description: FK to dim_merchant.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('gold__dim_merchant')
+                field: merchant_hub_key
+      - name: customer_hub_key
+        description: FK to dim_customer (via account).
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('gold__dim_customer')
+                field: customer_hub_key
+      - name: date_key
+        description: FK to dim_date, from transaction_date.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('gold__dim_date')
+                field: date_key
+      - name: amount_usd
+        description: Measure - transaction amount.
+        tests:
+          - positive_value
+
+  - name: gold__fact_loans
+    description: One row per loan.
+    columns:
+      - name: loan_hub_key
+        description: Grain key.
+        tests:
+          - unique
+          - not_null
+      - name: customer_hub_key
+        description: FK to dim_customer.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('gold__dim_customer')
+                field: customer_hub_key
+      - name: date_key
+        description: FK to dim_date, from start_date.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('gold__dim_date')
+                field: date_key
+      - name: loan_amount
+        description: Measure - loan principal.
+        tests:
+          - positive_value
+      - name: interest_rate
+        description: Measure - interest rate.
+        tests:
+          - in_range:
+              arguments:
+                min_value: 0
+                max_value: 100
+
+  - name: gold__fact_account_balance
+    description: One row per account, current snapshot.
+    columns:
+      - name: account_hub_key
+        description: Grain key / FK to dim_account.
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('gold__dim_account')
+                field: account_hub_key
+      - name: customer_hub_key
+        description: FK to dim_customer.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('gold__dim_customer')
+                field: customer_hub_key
+      - name: date_key
+        description: FK to dim_date, from balance capture date.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('gold__dim_date')
+                field: date_key
+      - name: balance_usd
+        description: Measure - current balance.
+        tests:
+          - in_range:
+              arguments:
+                min_value: 0

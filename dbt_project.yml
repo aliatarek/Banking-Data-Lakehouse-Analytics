@@ -45,3 +45,6 @@ models:
       satellites:
         +materialized: incremental
         +incremental_strategy: append
+    gold:
+      +materialized: table
+      +schema: gold

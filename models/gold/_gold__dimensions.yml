@@ -1,0 +1,166 @@
+version: 2
+
+models:
+  - name: gold__dim_customer
+    description: SCD Type 2 customer dimension. One row per customer version.
+    columns:
+      - name: customer_key
+        description: PK, version surrogate key.
+        tests:
+          - unique
+          - not_null
+      - name: customer_hub_key
+        description: Durable customer key. Use to join from facts.
+        tests:
+          - not_null
+          - single_current_version
+      - name: customer_id
+        description: Business key.
+        tests:
+          - not_null
+      - name: credit_tier
+        description: Derived bucket from credit_score.
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['excellent', 'good', 'fair', 'poor', 'very_poor']
+              config:
+                where: "credit_tier is not null"
+      - name: is_current
+        description: True for the latest version only.
+        tests:
+          - not_null
+
+  - name: gold__dim_account
+    description: SCD Type 2 account dimension. One row per account version.
+    columns:
+      - name: account_key
+        description: PK, version surrogate key.
+        tests:
+          - unique
+          - not_null
+      - name: account_hub_key
+        description: Durable account key. Use to join from facts.
+        tests:
+          - not_null
+          - single_current_version
+      - name: account_id
+        description: Business key.
+        tests:
+          - not_null
+      - name: customer_hub_key
+        description: Parent customer, from the customer-account link.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('gold__dim_customer')
+                field: customer_hub_key
+      - name: account_type
+        description: Account type.
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Business', 'Checking', 'Savings']
+              config:
+                where: "account_type is not null"
+      - name: is_current
+        description: Latest version flag.
+        tests:
+          - not_null
+
+  - name: gold__dim_card
+    description: SCD Type 2 card dimension. Not linked directly to any fact.
+    columns:
+      - name: card_key
+        description: PK, version surrogate key.
+        tests:
+          - unique
+          - not_null
+      - name: card_hub_key
+        description: Durable card key.
+        tests:
+          - not_null
+          - single_current_version
+      - name: card_id
+        description: Business key.
+        tests:
+          - not_null
+      - name: account_hub_key
+        description: Parent account. Reach cards via this, then dim_account.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('gold__dim_account')
+                field: account_hub_key
+      - name: card_type
+        description: Card type.
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Credit', 'Debit']
+              config:
+                where: "card_type is not null"
+      - name: is_current
+        description: Latest version flag.
+        tests:
+          - not_null
+
+  - name: gold__dim_merchant
+    description: SCD Type 2 merchant dimension.
+    columns:
+      - name: merchant_key
+        description: PK, version surrogate key.
+        tests:
+          - unique
+          - not_null
+      - name: merchant_hub_key
+        description: Durable merchant key. Join from fact_transactions.
+        tests:
+          - not_null
+          - single_current_version
+      - name: merchant_id
+        description: Business key.
+        tests:
+          - not_null
+      - name: is_current
+        description: Latest version flag.
+        tests:
+          - not_null
+
+  - name: gold__dim_branch
+    description: SCD Type 2 branch dimension. Orphan - no fact table references branches today.
+    columns:
+      - name: branch_key
+        description: PK, version surrogate key.
+        tests:
+          - unique
+          - not_null
+      - name: branch_hub_key
+        description: Durable branch key.
+        tests:
+          - not_null
+          - single_current_version
+      - name: branch_id
+        description: Business key.
+        tests:
+          - not_null
+      - name: is_current
+        description: Latest version flag.
+        tests:
+          - not_null
+
+  - name: gold__dim_date
+    description: Static calendar dimension, one row per day from 2015-01-01 to 2030-01-01. Not SCD2.
+    columns:
+      - name: date_key
+        description: PK, integer yyyymmdd.
+        tests:
+          - unique
+          - not_null
+      - name: date_day
+        description: Calendar date.
+        tests:
+          - unique
+          - not_null
