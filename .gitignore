@@ -3,3 +3,5 @@ target/
 dbt_packages/
 logs/
 .env
+profiles.yml
+.user.yml

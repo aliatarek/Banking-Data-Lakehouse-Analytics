@@ -1,0 +1,37 @@
+version: 2
+
+models:
+  - name: reporting__customer_kpis
+    description: One-row executive KPI snapshot for customers, deposits, loans, and transactions.
+  - name: reporting__monthly_customer_growth
+    description: One row per acquisition month with new customer counts.
+  - name: reporting__monthly_account_openings_by_type
+    description: One row per open month and account type with new account counts.
+  - name: reporting__account_type_deposits
+    description: One row per account type with current deposit balances and account counts.
+  - name: reporting__account_opening_cohort_trend
+    description: One row per open month and account type using current balance as an open-date cohort proxy.
+  - name: reporting__customer_balance_summary
+    description: One row per current customer with aggregated balance and account counts.
+  - name: reporting__customer_balance_kpis
+    description: One-row balance statistics table with average and median customer balance.
+  - name: reporting__loan_monthly_trend
+    description: One row per origination month with lending volume and average rate.
+  - name: reporting__interest_rate_by_credit_tier
+    description: One row per credit tier with average interest rate and loan volume.
+  - name: reporting__loan_penetration_by_credit_tier
+    description: One row per credit tier showing loan-holder penetration.
+  - name: reporting__customer_credit_mix_monthly
+    description: One row per acquisition month and credit tier with customer mix percentages.
+  - name: reporting__card_portfolio_summary
+    description: One row per account type and card type with card counts.
+  - name: reporting__dim_card_enriched
+    description: One row per current card enriched with account, customer, expiry, and operational flags.
+  - name: reporting__card_expiry_buckets
+    description: One row per expiry threshold bucket for 30, 60, and 90-day card counts.
+  - name: reporting__transaction_monthly_summary
+    description: One row per transaction month with count and volume metrics.
+  - name: reporting__top_merchants
+    description: One row per merchant with ranked transaction volume.
+  - name: reporting__avg_transaction_by_account_type
+    description: One row per account type with transaction count, volume, and average ticket size.
