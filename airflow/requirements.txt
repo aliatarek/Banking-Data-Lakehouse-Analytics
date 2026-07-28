@@ -1,0 +1,8 @@
+# Base image is apache/airflow:slim-3.3.0-python3.12, which ships none of the
+# providers below (unlike the "full" tag). SQLAlchemy comes with airflow-core
+# regardless of slim/full; psycopg2-binary is pulled in unconditionally by
+# apache-airflow-providers-postgres itself — neither needs its own line here.
+apache-airflow-providers-postgres
+apache-airflow-providers-celery
+apache-airflow-providers-fab
+astronomer-cosmos[dbt-postgres]==1.15.0
