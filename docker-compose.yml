@@ -151,7 +151,7 @@ services:
       SUPERSET_ADMIN_USERNAME: ${SUPERSET_ADMIN_USERNAME}
       SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD}
       SUPERSET_ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL}
-      SUPERSET_DATABASE_URI: postgresql+psycopg2://${PLATFORM_DB_USER}:${PLATFORM_DB_PASSWORD}@platform-db:5432/superset
+      SUPERSET_DATABASE_URI: postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/superset_metadata
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME}
@@ -161,9 +161,6 @@ services:
       - "8088:8088"
     volumes:
       - superset-home:/app/superset_home
-    depends_on:
-      platform-db:
-        condition: service_healthy
     restart: unless-stopped
 
 volumes:
