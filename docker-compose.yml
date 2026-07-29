@@ -161,6 +161,7 @@ services:
       - "8088:8088"
     volumes:
       - superset-home:/app/superset_home
+      - ./dashboarding reports:/app/dashboarding_reports:ro
     restart: unless-stopped
 
 volumes:
