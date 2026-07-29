@@ -40,6 +40,16 @@ Known gaps in the source data (not fabricated anywhere downstream — see [Known
 - **Airflow** (`airflow/dags/dbt_medallion_dag.py`): one DAG — a source-availability health check, then the entire dbt project rendered as native Airflow tasks by Cosmos (bronze → silver → gold → reporting, dbt tests included), then a completion marker. No SQL lives in the DAG.
 - **Superset**: connects directly to the Reporting schema on Railway; a bootstrap script auto-registers that connection and a starter dashboard on first boot.
 
+## Recent model changes
+
+Changes made to `dbt/models/` during the Airflow/Superset integration, most recent first:
+
+- **`credit_tier` bucket labels renamed** (`gold__dim_customer.sql`): `excellent/good/fair/poor/very_poor` → industry-standard `super_prime/prime/near_prime/subprime/deep_subprime`. Every reporting model that references `credit_tier` (`reporting__interest_rate_by_credit_tier`, `reporting__loan_penetration_by_credit_tier`, `reporting__customer_credit_mix_monthly`) was updated to match.
+- **Fixed a join-key bug** in `reporting__interest_rate_by_credit_tier.sql`: the loan-to-customer join used the wrong column (`fl.hk_customer`, which doesn't exist on that table) — corrected to `fl.customer_hub_key`. Also added a missing `where is_current` filter so only the latest dimension version is counted.
+- **Grain change**: `reporting__monthly_account_openings_by_type` → `reporting__yearly_account_openings_by_type` — account openings are now aggregated by year, not month.
+- **New reporting layer** (`dbt/models/reporting/`): one flat, pre-aggregated table per BI chart, plus `REPORTING_CHART_GUIDE.md` (chart-to-dataset mapping) and `REPORTING_METRIC_CHEATSHEET.md` (which aggregate — `MAX`/`SUM`/`COUNT` — to use per dataset).
+- **Performance fix in all 12 Silver hub/link models** (`dbt/models/silver/hubs/`, `dbt/models/silver/links/`): the incremental "skip already-loaded rows" check used `not in (select x from {{ this }})`, which Postgres can't safely turn into a hash anti-join once the target table has real data (NULL semantics make `NOT IN` unsafe to optimize) — it was falling back to an O(n²) per-row rescan. Against `silver__hub_transaction` (1M rows) this had a planner cost estimate of ~19.3 billion and never completed in practice. Rewritten as `not exists (select 1 from {{ this }} existing where existing.x = deduped.x)`, which Postgres plans as a proper Hash Anti Join (verified cost: ~311k). This affects every hub/link model, not just the one that hit the wall — all of them would have failed the same way on their next incremental run once populated.
+
 ## Testing
 
 166 dbt tests across all four layers:
@@ -53,14 +63,15 @@ Run everything with `dbt test` (or `dbt build` to run models + tests together).
 ## Repository layout
 
 ```
-airflow/          Custom Airflow image (Dockerfile), DAGs, plugins
-dbt/              dbt project — models/{bronze,silver,gold,reporting}, macros, tests, profiles.yml
-superset/         Custom Superset image (Dockerfile), bootstrap script, config
-scripts/          Shared helper scripts (platform-db init SQL)
-EDA/              Exploratory data analysis notebook
+airflow/            Custom Airflow image (Dockerfile), DAGs, plugins
+dbt/                dbt project — models/{bronze,silver,gold,reporting}, macros, tests, profiles.yml
+superset/           Custom Superset image (Dockerfile), bootstrap + chart-import scripts, config
+dashboarding reports/  Superset chart exports (.zip) contributed by teammates, auto-imported on boot
+scripts/            Shared helper scripts (platform-db init SQL)
+EDA/                Exploratory data analysis notebook
 docker-compose.yml
 .env.example
-requirements.txt  Local-only deps for running `dbt` from your own machine
+requirements.txt    Local-only deps for running `dbt` from your own machine
 ```
 
 ## Prerequisites
@@ -69,20 +80,62 @@ requirements.txt  Local-only deps for running `dbt` from your own machine
 - **~6 GB free disk** (Airflow image ~2.3 GB, Superset image ~1 GB, plus Postgres/Redis volumes and container logs)
 - Network access to your Railway Postgres instance
 
-## Setup
+## Setup: step-by-step
 
-1. `cp .env.example .env` and fill in:
-   - `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` — your Railway Postgres credentials.
-   - `PLATFORM_DB_PASSWORD`, `AIRFLOW__CORE__FERNET_KEY`, `AIRFLOW__WEBSERVER__SECRET_KEY`, `SUPERSET_SECRET_KEY` — generate with the commands noted inline in `.env.example`.
-   - Admin usernames/passwords for Airflow and Superset.
-   - On Linux, also set `AIRFLOW_UID` to your own user ID (`echo AIRFLOW_UID=$(id -u) >> .env`) so the bind-mounted `airflow/dags`, `airflow/plugins`, and `dbt/` folders stay writable/readable by the container.
-2. `docker compose up` (add `-d` to detach). By default this **builds both images locally** from the Dockerfiles — no registry needed. First boot builds images and runs migrations — give it a few minutes.
-   - Prebuilt images are also published at [`mo4222/banking-airflow`](https://hub.docker.com/r/mo4222/banking-airflow) and [`mo4222/banking-superset`](https://hub.docker.com/r/mo4222/banking-superset). To use those instead of building locally, run `docker compose pull` before `docker compose up` (or `docker compose up --pull always`).
-3. Airflow UI: http://localhost:8080 (login with `_AIRFLOW_WWW_USER_USERNAME` / `_AIRFLOW_WWW_USER_PASSWORD`). Unpause and trigger `dbt_medallion_pipeline`.
-4. Superset UI: http://localhost:8088 (login with `SUPERSET_ADMIN_USERNAME` / `SUPERSET_ADMIN_PASSWORD`). The "Gold Analytics (Railway Postgres)" connection and the "Banking Gold Layer - Overview" dashboard are created automatically on first boot.
-5. Optional: `docker compose --profile flower up` also starts Flower (Celery monitoring) on http://localhost:5555.
+**1. Get the code and configure your environment**
 
-Nothing runs locally besides the containers themselves — Airflow, dbt, and Superset all read/write the same Railway Postgres instance; Airflow's own internal metadata (task state, users, connections) lives in a small local `platform-db` container, per-teammate. Superset's metadata (dashboards, charts, users) is instead stored on a shared Railway database (`superset_metadata`) so it stays in sync across the team — see the note below.
+```bash
+git clone https://github.com/aliatarek/Banking-Data-Lakehouse-Analytics.git
+cd Banking-Data-Lakehouse-Analytics
+cp .env.example .env
+```
+
+Edit `.env` and fill in:
+- `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` — the shared Railway Postgres credentials (ask a teammate if you don't have these).
+- `PLATFORM_DB_PASSWORD`, `AIRFLOW__CORE__FERNET_KEY`, `AIRFLOW__WEBSERVER__SECRET_KEY`, `SUPERSET_SECRET_KEY` — generate with the commands noted inline in `.env.example`.
+- Admin usernames/passwords for Airflow and Superset (`_AIRFLOW_WWW_USER_*`, `SUPERSET_ADMIN_*`).
+- **On Linux**, also set `AIRFLOW_UID` to your own user ID so the bind-mounted `airflow/dags`, `airflow/plugins`, and `dbt/` folders stay writable by the container:
+  ```bash
+  echo "AIRFLOW_UID=$(id -u)" >> .env
+  ```
+
+**2. Start everything**
+
+```bash
+docker compose pull   # use the prebuilt mo4222/banking-airflow and mo4222/banking-superset images
+docker compose up -d
+```
+
+(Omit `docker compose pull` if you'd rather build both images locally from the Dockerfiles — no registry needed, just slower on first boot.)
+
+**First boot takes a while and that's expected**: Airflow runs DB migrations, and Superset does a one-time migration against its metadata store followed by importing the teammate-exported charts — each step is a real network round trip to the shared Railway instance, so first startup can take 15–40 minutes depending on network conditions. Subsequent restarts are fast (migrations are already applied). Watch progress with:
+
+```bash
+docker compose logs -f superset
+docker compose logs -f airflow-api-server
+```
+
+**3. Access Airflow** — http://localhost:8080
+
+Log in with `_AIRFLOW_WWW_USER_USERNAME` / `_AIRFLOW_WWW_USER_PASSWORD`. Unpause and trigger the `dbt_medallion_pipeline` DAG to run the full bronze→silver→gold→reporting pipeline against Railway.
+
+**4. Access Superset and the dashboard** — http://localhost:8088
+
+Log in with `SUPERSET_ADMIN_USERNAME` / `SUPERSET_ADMIN_PASSWORD`. On first boot this automatically creates:
+- A **"Gold Analytics (Railway Postgres)"** database connection and 4 reporting datasets, used by 7 starter charts (the 4 `reporting__customer_kpis` KPI tiles, monthly transaction volume, new customers per month, top customers by balance).
+- 9 additional charts imported from teammates' own exports (`dashboarding reports/*.zip`) — card portfolio, credit risk, and transaction-activity charts.
+- All 16 charts are attached to one dashboard: **"Banking Data Lakehouse Analytics"** (find it under Dashboards). No manual chart-building needed — everything is created for you.
+
+**5. Optional: Flower (Celery monitoring)**
+
+```bash
+docker compose --profile flower up
+```
+Then visit http://localhost:5555.
+
+---
+
+Nothing runs locally besides the containers themselves — Airflow, dbt, and Superset all read/write the same Railway Postgres instance; Airflow's own internal metadata (task state, users, connections) lives in a small local `platform-db` container, per-teammate. Superset's metadata (dashboards, charts, users) is instead stored on a shared Railway database (`superset_metadata`) so it stays in sync across the team — see [Sharing state across the team](#sharing-state-across-the-team).
 
 ## Running dbt without Docker
 
