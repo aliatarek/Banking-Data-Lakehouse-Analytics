@@ -90,8 +90,6 @@ def get_or_create_chart(db_session, Slice, slice_name: str, dataset, viz_type: s
 
 
 def build_position_json(charts: list) -> str:
-    root_children = []
-    row_children = []
     position = {
         "DASHBOARD_VERSION_KEY": "v2",
         "ROOT_ID": {"type": "ROOT", "id": "ROOT_ID", "children": ["GRID_ID"]},
