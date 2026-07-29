@@ -77,8 +77,8 @@ requirements.txt    Local-only deps for running `dbt` from your own machine
 ## Prerequisites
 
 - Docker + Docker Compose
-- **~6 GB free disk** (Airflow image ~2.3 GB, Superset image ~1 GB, plus Postgres/Redis volumes and container logs)
-- Network access to your Railway Postgres instance
+- **~3 GB free disk** (Airflow image ~1.13 GB, Superset image ~955 MB, plus Postgres/Redis volumes and container logs)
+- Network access to the shared team Railway Postgres instance (credentials from a teammate — see [Setup](#setup-step-by-step))
 
 ## Setup: step-by-step
 
