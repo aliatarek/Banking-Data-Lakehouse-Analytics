@@ -44,5 +44,8 @@ from deduped
 where rn = 1
 
 {% if is_incremental() %}
-  and hk_branch not in (select hk_branch from {{ this }})
+  and not exists (
+    select 1 from {{ this }} existing
+    where existing.hk_branch = deduped.hk_branch
+  )
 {% endif %}
