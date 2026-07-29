@@ -18,8 +18,8 @@ logger = logging.getLogger("superset_bootstrap")
 logging.basicConfig(level=logging.INFO)
 
 GOLD_DATABASE_NAME = "Gold Analytics (Railway Postgres)"
-DASHBOARD_TITLE = "Banking Gold Layer - Overview"
-DASHBOARD_SLUG = "banking-gold-overview"
+DASHBOARD_TITLE = "Banking Data Lakehouse Analytics"
+DASHBOARD_SLUG = "banking-data-lakehouse-analytics"
 
 
 def wait_for_metadata_db(max_attempts: int = 30, delay_seconds: int = 2) -> None:
@@ -122,6 +122,10 @@ def build_position_json(charts: list) -> str:
 def get_or_create_dashboard(db_session, Dashboard, charts: list):
     dashboard = db_session.query(Dashboard).filter_by(slug=DASHBOARD_SLUG).first()
     if dashboard:
+        dashboard.slices = charts
+        dashboard.position_json = build_position_json(charts)
+        db_session.commit()
+        logger.info("Synced dashboard: %s (%d charts)", DASHBOARD_TITLE, len(charts))
         return dashboard
     dashboard = Dashboard(
         dashboard_title=DASHBOARD_TITLE,
@@ -154,13 +158,17 @@ def bootstrap_assets() -> None:
         customer_kpis = get_or_create_dataset(db_session, SqlaTable, database, "reporting__customer_kpis")
         monthly_txn = get_or_create_dataset(db_session, SqlaTable, database, "reporting__transaction_monthly_summary")
         balance_summary = get_or_create_dataset(db_session, SqlaTable, database, "reporting__customer_balance_summary")
+        monthly_growth = get_or_create_dataset(db_session, SqlaTable, database, "reporting__monthly_customer_growth")
 
-        total_volume_metric = {
-            "expressionType": "SIMPLE",
-            "column": {"column_name": "total_transaction_volume_usd"},
-            "aggregate": "SUM",
-            "label": "Total Transaction Volume (USD)",
-        }
+        def kpi_metric(column_name: str, label: str) -> dict:
+            return {
+                "expressionType": "SIMPLE",
+                "column": {"column_name": column_name},
+                "aggregate": "MAX",
+                "label": label,
+            }
+
+        total_volume_metric = kpi_metric("total_transaction_volume_usd", "Total Transaction Volume (USD)")
 
         chart_total = get_or_create_chart(
             db_session,
@@ -171,6 +179,68 @@ def bootstrap_assets() -> None:
             {"metric": total_volume_metric, "adhoc_filters": [], "time_range": "No filter"},
         )
 
+        chart_total_customers = get_or_create_chart(
+            db_session,
+            Slice,
+            "Total Customers",
+            customer_kpis,
+            "big_number_total",
+            {
+                "metric": kpi_metric("total_customers", "Total Customers"),
+                "adhoc_filters": [],
+                "time_range": "No filter",
+            },
+        )
+
+        chart_total_deposits = get_or_create_chart(
+            db_session,
+            Slice,
+            "Total Deposits",
+            customer_kpis,
+            "big_number_total",
+            {
+                "metric": kpi_metric("total_deposits_usd", "Total Deposits (USD)"),
+                "adhoc_filters": [],
+                "time_range": "No filter",
+            },
+        )
+
+        chart_total_loan_book = get_or_create_chart(
+            db_session,
+            Slice,
+            "Total Loan Book",
+            customer_kpis,
+            "big_number_total",
+            {
+                "metric": kpi_metric("total_loan_book_usd", "Total Loan Book (USD)"),
+                "adhoc_filters": [],
+                "time_range": "No filter",
+            },
+        )
+
+        chart_new_customers = get_or_create_chart(
+            db_session,
+            Slice,
+            "New Customers per Month",
+            monthly_growth,
+            "echarts_timeseries_line",
+            {
+                "x_axis": "acquisition_month",
+                "metrics": [
+                    {
+                        "expressionType": "SIMPLE",
+                        "column": {"column_name": "new_customers"},
+                        "aggregate": "SUM",
+                        "label": "New Customers",
+                    }
+                ],
+                "groupby": [],
+                "adhoc_filters": [],
+                "time_range": "No filter",
+                "row_limit": 5000,
+            },
+        )
+
         chart_monthly = get_or_create_chart(
             db_session,
             Slice,
@@ -179,7 +249,14 @@ def bootstrap_assets() -> None:
             "echarts_timeseries_line",
             {
                 "x_axis": "transaction_month",
-                "metrics": [total_volume_metric],
+                "metrics": [
+                    {
+                        "expressionType": "SIMPLE",
+                        "column": {"column_name": "total_transaction_volume_usd"},
+                        "aggregate": "SUM",
+                        "label": "Total Transaction Volume (USD)",
+                    }
+                ],
                 "groupby": [],
                 "adhoc_filters": [],
                 "time_range": "No filter",
@@ -203,7 +280,19 @@ def bootstrap_assets() -> None:
             },
         )
 
-        get_or_create_dashboard(db_session, Dashboard, [chart_total, chart_monthly, chart_top_customers])
+        get_or_create_dashboard(
+            db_session,
+            Dashboard,
+            [
+                chart_total_customers,
+                chart_total_deposits,
+                chart_total_loan_book,
+                chart_total,
+                chart_new_customers,
+                chart_monthly,
+                chart_top_customers,
+            ],
+        )
 
 
 if __name__ == "__main__":
