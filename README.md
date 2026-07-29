@@ -107,7 +107,7 @@ docker compose up -d
 
 (Omit `docker compose pull` if you'd rather build both images locally from the Dockerfiles — no registry needed, just slower on first boot.)
 
-**First boot takes a while and that's expected**: Airflow runs DB migrations, and Superset does a one-time migration against its metadata store followed by discovering and charting the existing `reporting` tables — each step is a real network round trip to the shared Railway instance, so first startup can take 15–40 minutes depending on network conditions. Subsequent restarts are fast (migrations are already applied). Watch progress with:
+**Every start (not just the first) takes a while, and that's expected**: Superset re-syncs its role/permission definitions on every boot — restart included — and each of those steps is a real network round trip to the shared Railway instance, so even a plain `docker compose restart superset` commonly takes 5–10 minutes before it reports healthy. First boot is slower still (schema migrations + the initial full pass over every `reporting` table), 15–40 minutes depending on network conditions. Watch progress with:
 
 ```bash
 docker compose logs -f superset
@@ -128,6 +128,43 @@ Log in with `SUPERSET_ADMIN_USERNAME` / `SUPERSET_ADMIN_PASSWORD`. On first boot
 **Adding a new report later:** just add a `.sql` model to `dbt/models/reporting/` — the normal dbt workflow, no Superset knowledge required — and push. Once `dbt build` runs (the daily Airflow schedule, or a manual run — see [Common commands](#common-commands)) and the new table exists in Railway's `reporting` schema, any Superset container already running picks it up automatically within ~60 seconds and adds a default chart to the shared dashboard — no restart, no command. Since Superset's metadata lives on Railway, not per-teammate, it becomes visible to the whole team immediately once one running instance has processed it. Want something nicer than the auto-generated default? Build a better chart for that same table in Superset's UI — it won't be touched or duplicated, since the discovery process skips any table that already has a chart.
 
 See [Common commands](#common-commands) below for logs, shells, rebuilding, and stopping — including the optional Flower (Celery monitoring) profile.
+
+**5. Verify the auto-chart pipeline end to end** (optional, but a good way to confirm your setup actually works):
+
+1. Add a throwaway model, e.g. `dbt/models/reporting/reporting__test_my_first_report.sql`:
+   ```sql
+   select
+       date_trunc('month', created_date)::date as signup_month,
+       count(*) as customer_count
+   from {{ ref('gold__dim_customer') }}
+   group by 1
+   ```
+2. Materialize it without waiting for the daily schedule:
+   ```bash
+   docker compose exec -T -e DBT_PROFILES_DIR=/opt/airflow/dbt airflow-api-server bash -c "cd /opt/airflow/dbt && dbt build --select reporting__test_my_first_report"
+   ```
+3. Watch `docker compose logs -f superset` — within ~60 seconds you should see `Auto-created chart for new reporting table: reporting__test_my_first_report (echarts_timeseries_line)` followed by `Synced dashboard: ... (N charts)`.
+4. Confirm it in the browser: Dashboards → Banking Data Lakehouse Analytics.
+5. Clean up afterward — delete the `.sql` file, then remove the dataset/chart/table so no test cruft lingers:
+   ```bash
+   rm dbt/models/reporting/reporting__test_my_first_report.sql
+   docker exec banking-data-lakehouse-analytics-superset-1 python3 -c "
+   from superset.app import create_app
+   app = create_app()
+   with app.app_context():
+       from superset.connectors.sqla.models import SqlaTable
+       from superset.models.slice import Slice
+       from superset import db as flask_db
+       ds = flask_db.session.query(SqlaTable).filter_by(table_name='reporting__test_my_first_report').first()
+       if ds:
+           chart = flask_db.session.query(Slice).filter_by(slice_name='Test My First Report').first()
+           if chart: flask_db.session.delete(chart)
+           flask_db.session.delete(ds)
+           flask_db.session.commit()
+   "
+   set -a; source .env; set +a
+   PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c 'drop table if exists reporting.reporting__test_my_first_report;'
+   ```
 
 ---
 
