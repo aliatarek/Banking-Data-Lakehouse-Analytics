@@ -55,11 +55,11 @@ select
     credit_score,
     case
         when credit_score is null then null
-        when credit_score >= 800 then 'excellent'
-        when credit_score >= 740 then 'good'
-        when credit_score >= 670 then 'fair'
-        when credit_score >= 580 then 'poor'
-        else 'very_poor'
+        when credit_score >= 800 then 'super_prime'
+        when credit_score >= 740 then 'prime'
+        when credit_score >= 670 then 'near_prime'
+        when credit_score >= 580 then 'subprime'
+        else 'deep_subprime'
     end as credit_tier,
     created_at::date as created_date,
     date_trunc('month', created_at)::date as acquisition_month,

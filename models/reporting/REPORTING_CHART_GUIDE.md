@@ -27,9 +27,9 @@ Use the `reporting` schema for dashboard datasets. Each table below is already s
    - Time column: `acquisition_month`
    - Metric: `new_customers`
 
-6. `New Accounts per Month by Type`
-   - Dataset: `reporting__monthly_account_openings_by_type`
-   - Time column: `open_month`
+6. `New Accounts per year by Type`
+   - Dataset: `reporting__yearly_account_openings_by_type`
+   - Time column: `open_year`
    - Group by: `account_type`
    - Metric: `new_accounts`
 

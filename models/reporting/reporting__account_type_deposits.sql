@@ -1,9 +1,10 @@
 with current_accounts as (
 
     select
-        hk_account as account_hub_key,
+        account_hub_key,
         account_type
     from {{ ref('gold__dim_account') }}
+    where is_current
 
 )
 

@@ -1,23 +1,17 @@
 with current_customers as (
 
     select
-        hk_customer as customer_hub_key,
-        case
-            when credit_score is null then null
-            when credit_score >= 800 then 'excellent'
-            when credit_score >= 740 then 'good'
-            when credit_score >= 670 then 'fair'
-            when credit_score >= 580 then 'poor'
-            else 'very_poor'
-        end as credit_tier
+        customer_hub_key,
+        credit_tier
     from {{ ref('gold__dim_customer') }}
+    where is_current
 
 ),
 
 loan_customers as (
 
     select distinct
-        hk_customer as customer_hub_key
+        customer_hub_key
     from {{ ref('gold__fact_loans') }}
 
 )
@@ -25,11 +19,11 @@ loan_customers as (
 select
     cc.credit_tier,
     case cc.credit_tier
-        when 'very_poor' then 1
-        when 'poor' then 2
-        when 'fair' then 3
-        when 'good' then 4
-        when 'excellent' then 5
+        when 'deep_subprime' then 1
+        when 'subprime' then 2
+        when 'near_prime' then 3
+        when 'prime' then 4
+        when 'super_prime' then 5
         else 99
     end as credit_tier_sort_order,
     count(*) as total_customers,

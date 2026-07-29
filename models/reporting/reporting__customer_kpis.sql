@@ -1,8 +1,9 @@
 with current_customers as (
 
     select
-        hk_customer as customer_hub_key
+        customer_hub_key
     from {{ ref('gold__dim_customer') }}
+    where is_current
 
 ),
 
