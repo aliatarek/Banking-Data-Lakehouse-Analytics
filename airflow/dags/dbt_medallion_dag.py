@@ -52,6 +52,7 @@ with DAG(
     start_date=datetime(2026, 1, 1),
     schedule="@daily",
     catchup=False,
+    is_paused_upon_creation=True,
     max_active_runs=1,
     default_args=default_args,
     tags=["dbt", "medallion", "cosmos"],

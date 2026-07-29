@@ -65,8 +65,7 @@ Run everything with `dbt test` (or `dbt build` to run models + tests together).
 ```
 airflow/            Custom Airflow image (Dockerfile), DAGs, plugins
 dbt/                dbt project — models/{bronze,silver,gold,reporting}, macros, tests, profiles.yml
-superset/           Custom Superset image (Dockerfile), bootstrap + chart-import scripts, config
-dashboarding reports/  Superset chart exports (.zip) contributed by teammates, auto-imported on boot
+superset/           Custom Superset image (Dockerfile), bootstrap + auto-chart-discovery scripts, config
 scripts/            Shared helper scripts (platform-db init SQL)
 EDA/                Exploratory data analysis notebook
 docker-compose.yml
@@ -108,7 +107,7 @@ docker compose up -d
 
 (Omit `docker compose pull` if you'd rather build both images locally from the Dockerfiles — no registry needed, just slower on first boot.)
 
-**First boot takes a while and that's expected**: Airflow runs DB migrations, and Superset does a one-time migration against its metadata store followed by importing the teammate-exported charts — each step is a real network round trip to the shared Railway instance, so first startup can take 15–40 minutes depending on network conditions. Subsequent restarts are fast (migrations are already applied). Watch progress with:
+**First boot takes a while and that's expected**: Airflow runs DB migrations, and Superset does a one-time migration against its metadata store followed by discovering and charting the existing `reporting` tables — each step is a real network round trip to the shared Railway instance, so first startup can take 15–40 minutes depending on network conditions. Subsequent restarts are fast (migrations are already applied). Watch progress with:
 
 ```bash
 docker compose logs -f superset
@@ -122,11 +121,11 @@ Log in with `_AIRFLOW_WWW_USER_USERNAME` / `_AIRFLOW_WWW_USER_PASSWORD`. Unpause
 **4. Access Superset and the dashboard** — http://localhost:8088
 
 Log in with `SUPERSET_ADMIN_USERNAME` / `SUPERSET_ADMIN_PASSWORD`. On first boot this automatically creates:
-- A **"Gold Analytics (Railway Postgres)"** database connection and 4 reporting datasets, used by 7 starter charts (the 4 `reporting__customer_kpis` KPI tiles, monthly transaction volume, new customers per month, top customers by balance).
-- 9 additional charts imported from teammates' own exports (`dashboarding reports/*.zip`) — card portfolio, credit risk, and transaction-activity charts.
-- All 16 charts are attached to one dashboard: **"Banking Data Lakehouse Analytics"** (find it under Dashboards). No manual chart-building needed — everything is created for you.
+- A **"Gold Analytics (Railway Postgres)"** database connection.
+- A dataset + a default chart for **every table in the `reporting` schema** — no manual chart-building, no exporting/importing anything. A background discovery process (`superset/sync_reporting_tables.py`) introspects each table's shape and picks a sensible visualization: a one-row table becomes a KPI tile, a table with a date/month/year column plus a numeric column becomes a time-series line chart, anything else becomes a plain table view.
+- All of these charts are attached to one dashboard: **"Banking Data Lakehouse Analytics"** (find it under Dashboards).
 
-**Adding a new report later:** export your chart from Superset's UI as a `.zip`, drop it into `dashboarding reports/`, commit and push. Anyone with a Superset container already running picks it up automatically within ~60 seconds — no restart, no command (a background watcher, `superset/watch_dashboard_exports.py`, checks that folder on a timer). They still need to `git pull` to get the file onto disk first; that part stays a normal, manual git step. Once one person's running instance has imported it, it's on the shared dashboard for the whole team immediately, since Superset's metadata lives on Railway, not per-teammate.
+**Adding a new report later:** just add a `.sql` model to `dbt/models/reporting/` — the normal dbt workflow, no Superset knowledge required — and push. Once `dbt build` runs (the daily Airflow schedule, or a manual run — see [Common commands](#common-commands)) and the new table exists in Railway's `reporting` schema, any Superset container already running picks it up automatically within ~60 seconds and adds a default chart to the shared dashboard — no restart, no command. Since Superset's metadata lives on Railway, not per-teammate, it becomes visible to the whole team immediately once one running instance has processed it. Want something nicer than the auto-generated default? Build a better chart for that same table in Superset's UI — it won't be touched or duplicated, since the discovery process skips any table that already has a chart.
 
 See [Common commands](#common-commands) below for logs, shells, rebuilding, and stopping — including the optional Flower (Celery monitoring) profile.
 
@@ -221,5 +220,5 @@ cd dbt && dbt build
 
 - **Data** (Bronze/Silver/Gold/Reporting tables) and **Airflow DAG code / dbt models** are shared automatically — everyone's containers point at the same Railway Postgres instance, and code syncs via git.
 - **Superset dashboards/charts/users** are shared live — its metadata store lives on the same Railway project (`superset_metadata`), not a per-teammate local database.
-- **New chart exports pushed to `dashboarding reports/`** are picked up automatically by any running Superset container within ~60 seconds of `git pull` (no restart, no manual import command) — see [Setup step 4](#setup-step-by-step). The `git pull` itself stays manual by design; nothing auto-fetches or auto-executes pushed code unreviewed.
+- **New reporting tables get a chart automatically**: push a `.sql` model to `dbt/models/reporting/`, and once it's materialized (daily schedule or a manual `dbt build`) any running Superset container discovers it and adds a default chart within ~60 seconds — no restart, no manual step — see [Setup step 4](#setup-step-by-step). `git pull` and running `dbt build` stay manual/reviewed steps; nothing auto-fetches or auto-executes pushed code unreviewed.
 - **Airflow's own run history/users/connections** stay per-teammate (local `platform-db`) — each teammate's scheduler/worker talks to its own local Redis broker, so sharing that metadata DB across independently-run schedulers would cause races on task-instance state.
