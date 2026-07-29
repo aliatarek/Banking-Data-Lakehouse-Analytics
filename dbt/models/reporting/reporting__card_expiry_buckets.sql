@@ -4,6 +4,7 @@ with current_cards as (
         card_id,
         expiration_date::date as expiration_date
     from {{ ref('gold__dim_card') }}
+    where is_current
 
 ),
 

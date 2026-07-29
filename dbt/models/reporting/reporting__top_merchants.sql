@@ -1,11 +1,12 @@
 with current_merchants as (
 
     select
-        hk_merchant as merchant_hub_key,
+        merchant_hub_key,
         merchant_id,
         merchant_name,
         city
     from {{ ref('gold__dim_merchant') }}
+    where is_current
 
 )
 

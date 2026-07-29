@@ -23,7 +23,7 @@ models:
         tests:
           - accepted_values:
               arguments:
-                values: ['excellent', 'good', 'fair', 'poor', 'very_poor']
+                values: ['super_prime', 'prime', 'near_prime', 'subprime', 'deep_subprime']
               config:
                 where: "credit_tier is not null"
       - name: is_current

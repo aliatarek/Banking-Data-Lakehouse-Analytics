@@ -1,20 +1,14 @@
 with current_customers as (
 
     select
-        hk_customer as customer_hub_key,
+        customer_hub_key,
         customer_id,
         first_name,
         last_name,
         city,
-        case
-            when credit_score is null then null
-            when credit_score >= 800 then 'excellent'
-            when credit_score >= 740 then 'good'
-            when credit_score >= 670 then 'fair'
-            when credit_score >= 580 then 'poor'
-            else 'very_poor'
-        end as credit_tier
+        credit_tier
     from {{ ref('gold__dim_customer') }}
+    where is_current
 
 ),
 

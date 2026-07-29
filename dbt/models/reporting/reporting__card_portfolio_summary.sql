@@ -1,19 +1,20 @@
 with current_cards as (
 
     select
-        lac.hk_account as account_hub_key,
+        account_hub_key,
         card_type
-    from {{ ref('gold__dim_card') }} dc
-    inner join {{ ref('silver__link_account_card') }} lac on lac.hk_card = dc.hk_card
+    from {{ ref('gold__dim_card') }}
+    where is_current
 
 ),
 
 current_accounts as (
 
     select
-        hk_account as account_hub_key,
+        account_hub_key,
         account_type
     from {{ ref('gold__dim_account') }}
+    where is_current
 
 )
 

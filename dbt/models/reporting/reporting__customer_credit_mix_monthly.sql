@@ -1,17 +1,11 @@
 with monthly_counts as (
 
     select
-        date_trunc('month', created_at)::date as acquisition_month,
-        case
-            when credit_score is null then null
-            when credit_score >= 800 then 'excellent'
-            when credit_score >= 740 then 'good'
-            when credit_score >= 670 then 'fair'
-            when credit_score >= 580 then 'poor'
-            else 'very_poor'
-        end as credit_tier,
+        acquisition_month,
+        credit_tier,
         count(*) as customer_count
     from {{ ref('gold__dim_customer') }}
+    where is_current
     group by 1, 2
 
 )
@@ -20,11 +14,11 @@ select
     acquisition_month,
     credit_tier,
     case credit_tier
-        when 'very_poor' then 1
-        when 'poor' then 2
-        when 'fair' then 3
-        when 'good' then 4
-        when 'excellent' then 5
+        when 'deep_subprime' then 1
+        when 'subprime' then 2
+        when 'near_prime' then 3
+        when 'prime' then 4
+        when 'super_prime' then 5
         else 99
     end as credit_tier_sort_order,
     customer_count,

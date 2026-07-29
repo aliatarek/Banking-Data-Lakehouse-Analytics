@@ -5,8 +5,8 @@ models:
     description: One-row executive KPI snapshot for customers, deposits, loans, and transactions.
   - name: reporting__monthly_customer_growth
     description: One row per acquisition month with new customer counts.
-  - name: reporting__monthly_account_openings_by_type
-    description: One row per open month and account type with new account counts.
+  - name: reporting__yearly_account_openings_by_type
+    description: One row per open year and account type with new account counts.
   - name: reporting__account_type_deposits
     description: One row per account type with current deposit balances and account counts.
   - name: reporting__account_opening_cohort_trend
