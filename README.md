@@ -126,6 +126,8 @@ Log in with `SUPERSET_ADMIN_USERNAME` / `SUPERSET_ADMIN_PASSWORD`. On first boot
 - 9 additional charts imported from teammates' own exports (`dashboarding reports/*.zip`) — card portfolio, credit risk, and transaction-activity charts.
 - All 16 charts are attached to one dashboard: **"Banking Data Lakehouse Analytics"** (find it under Dashboards). No manual chart-building needed — everything is created for you.
 
+**Adding a new report later:** export your chart from Superset's UI as a `.zip`, drop it into `dashboarding reports/`, commit and push. Anyone with a Superset container already running picks it up automatically within ~60 seconds — no restart, no command (a background watcher, `superset/watch_dashboard_exports.py`, checks that folder on a timer). They still need to `git pull` to get the file onto disk first; that part stays a normal, manual git step. Once one person's running instance has imported it, it's on the shared dashboard for the whole team immediately, since Superset's metadata lives on Railway, not per-teammate.
+
 See [Common commands](#common-commands) below for logs, shells, rebuilding, and stopping — including the optional Flower (Celery monitoring) profile.
 
 ---
@@ -219,4 +221,5 @@ cd dbt && dbt build
 
 - **Data** (Bronze/Silver/Gold/Reporting tables) and **Airflow DAG code / dbt models** are shared automatically — everyone's containers point at the same Railway Postgres instance, and code syncs via git.
 - **Superset dashboards/charts/users** are shared live — its metadata store lives on the same Railway project (`superset_metadata`), not a per-teammate local database.
+- **New chart exports pushed to `dashboarding reports/`** are picked up automatically by any running Superset container within ~60 seconds of `git pull` (no restart, no manual import command) — see [Setup step 4](#setup-step-by-step). The `git pull` itself stays manual by design; nothing auto-fetches or auto-executes pushed code unreviewed.
 - **Airflow's own run history/users/connections** stay per-teammate (local `platform-db`) — each teammate's scheduler/worker talks to its own local Redis broker, so sharing that metadata DB across independently-run schedulers would cause races on task-instance state.
