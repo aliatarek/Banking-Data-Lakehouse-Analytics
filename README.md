@@ -126,16 +126,68 @@ Log in with `SUPERSET_ADMIN_USERNAME` / `SUPERSET_ADMIN_PASSWORD`. On first boot
 - 9 additional charts imported from teammates' own exports (`dashboarding reports/*.zip`) — card portfolio, credit risk, and transaction-activity charts.
 - All 16 charts are attached to one dashboard: **"Banking Data Lakehouse Analytics"** (find it under Dashboards). No manual chart-building needed — everything is created for you.
 
-**5. Optional: Flower (Celery monitoring)**
-
-```bash
-docker compose --profile flower up
-```
-Then visit http://localhost:5555.
+See [Common commands](#common-commands) below for logs, shells, rebuilding, and stopping — including the optional Flower (Celery monitoring) profile.
 
 ---
 
 Nothing runs locally besides the containers themselves — Airflow, dbt, and Superset all read/write the same Railway Postgres instance; Airflow's own internal metadata (task state, users, connections) lives in a small local `platform-db` container, per-teammate. Superset's metadata (dashboards, charts, users) is instead stored on a shared Railway database (`superset_metadata`) so it stays in sync across the team — see [Sharing state across the team](#sharing-state-across-the-team).
+
+## Common commands
+
+Everything below assumes you're in the repo root, where `docker-compose.yml` lives.
+
+**Starting**
+```bash
+docker compose pull              # fetch the prebuilt mo4222/banking-airflow and mo4222/banking-superset images
+docker compose up -d             # start everything, detached
+docker compose up -d superset    # start (or recreate) just one service
+```
+
+**Checking status and logs**
+```bash
+docker compose ps                       # health/status of every container
+docker compose logs -f superset         # follow logs for one service (Ctrl+C to stop following)
+docker compose logs --tail 100 airflow-api-server
+```
+
+**Getting a shell inside a container**
+```bash
+docker compose exec -it airflow-api-server bash
+docker compose exec -it superset bash
+```
+
+**Rebuilding after changing code** (`airflow/` or `superset/` — Dockerfiles COPY these in at build time, so edits alone don't take effect until rebuilt):
+```bash
+docker compose up -d --build airflow-api-server airflow-scheduler airflow-worker airflow-triggerer airflow-dag-processor
+docker compose up -d --build superset
+```
+
+**Running dbt manually** (e.g. to pick up new model changes without waiting on the Airflow DAG):
+```bash
+docker compose exec -T -e DBT_PROFILES_DIR=/opt/airflow/dbt airflow-api-server bash -c "cd /opt/airflow/dbt && dbt build"
+# if a build fails partway through, re-run just the failed/skipped nodes:
+docker compose exec -T -e DBT_PROFILES_DIR=/opt/airflow/dbt airflow-api-server bash -c "cd /opt/airflow/dbt && dbt retry"
+```
+
+**Restarting a single service** (without a rebuild):
+```bash
+docker compose restart superset
+```
+
+**Stopping**
+```bash
+docker compose stop                     # stop containers, keep them (and volumes) around to resume later
+docker compose down                     # stop + remove containers and the network, but keep volumes
+                                         # (platform-db data, Airflow logs, Superset home persist — `docker compose up -d` picks up where you left off)
+docker compose down -v                  # also delete volumes — full local reset, next boot starts from scratch
+                                         # (safe: Railway data, the reporting schema, and Superset's dashboards/charts
+                                         # all live on the shared Railway instance, not in these local volumes)
+```
+
+**Optional: Flower (Celery monitoring)**
+```bash
+docker compose --profile flower up
+```
 
 ## Running dbt without Docker
 
