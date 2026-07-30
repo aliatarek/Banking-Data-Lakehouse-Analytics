@@ -120,10 +120,16 @@ def build_position_json(charts: list) -> str:
 def get_or_create_dashboard(db_session, Dashboard, charts: list):
     dashboard = db_session.query(Dashboard).filter_by(slug=DASHBOARD_SLUG).first()
     if dashboard:
-        dashboard.slices = charts
-        dashboard.position_json = build_position_json(charts)
+        # Merge, don't replace: other processes (sync_reporting_tables.py's
+        # poller) attach charts to this same dashboard between bootstrap runs.
+        # Overwriting dashboard.slices here would silently drop those on every
+        # container restart.
+        existing_ids = {s.id for s in dashboard.slices}
+        merged = list(dashboard.slices) + [c for c in charts if c.id not in existing_ids]
+        dashboard.slices = merged
+        dashboard.position_json = build_position_json(merged)
         db_session.commit()
-        logger.info("Synced dashboard: %s (%d charts)", DASHBOARD_TITLE, len(charts))
+        logger.info("Synced dashboard: %s (%d charts)", DASHBOARD_TITLE, len(merged))
         return dashboard
     dashboard = Dashboard(
         dashboard_title=DASHBOARD_TITLE,
