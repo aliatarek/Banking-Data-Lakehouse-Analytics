@@ -59,6 +59,9 @@ Use the `reporting` schema for dashboard datasets. Each table below is already s
     - Dataset: `reporting__customer_balance_kpis`
     - Metric: `median_balance_usd`
 
+average helps with business size
+median helps with customer reality
+
 12. `Deposit Concentration`
     - Dataset: `reporting__customer_balance_summary`
     - Sort by: `balance_rank` or `total_balance_usd desc`
