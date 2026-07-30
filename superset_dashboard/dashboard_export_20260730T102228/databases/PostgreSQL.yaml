@@ -1,0 +1,15 @@
+database_name: PostgreSQL
+sqlalchemy_uri: postgresql+psycopg2://postgres:XXXXXXXXXX@reseau.proxy.rlwy.net:42589/scb_proj
+cache_timeout: null
+expose_in_sqllab: true
+allow_run_async: false
+allow_ctas: false
+allow_cvas: false
+allow_dml: false
+allow_file_upload: false
+extra:
+  allows_virtual_table_explore: true
+impersonate_user: false
+configuration_method: dynamic_form
+uuid: acfa61b8-01fe-4430-a3da-62d99bf7909e
+version: 1.0.0

@@ -1,0 +1,30 @@
+slice_name: Word Cloud
+description: null
+certified_by: null
+certification_details: null
+viz_type: word_cloud
+params:
+  adhoc_filters:
+  - clause: WHERE
+    comparator: No filter
+    expressionType: SIMPLE
+    operator: TEMPORAL_RANGE
+    subject: order_date
+  annotation_layers: []
+  color_scheme: supersetColors
+  dashboards:
+  - 13
+  datasource: 22__table
+  extra_form_data: {}
+  metric: count
+  rotation: square
+  row_limit: 100
+  series: customer_name
+  size_from: 10
+  size_to: 70
+  viz_type: word_cloud
+query_context: null
+cache_timeout: null
+uuid: d3967f7d-58ea-43fe-9961-7e061affdb1c
+version: 1.0.0
+dataset_uuid: e8623bb9-5e00-f531-506a-19607f5f8005

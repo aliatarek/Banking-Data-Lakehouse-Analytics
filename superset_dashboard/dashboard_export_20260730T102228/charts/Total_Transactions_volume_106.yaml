@@ -1,0 +1,68 @@
+slice_name: Total Transactions volume
+description: null
+certified_by: null
+certification_details: null
+viz_type: big_number_total
+params:
+  datasource: 24__table
+  viz_type: big_number_total
+  slice_id: 106
+  matrixify_enable: false
+  matrixify_mode_columns: disabled
+  matrixify_dimension_selection_mode_columns: members
+  matrixify_dimension_columns:
+    dimension: ''
+    values: []
+  matrixify_topn_value_columns: 10
+  matrixify_all_sort_by_columns: a_to_z
+  matrixify_topn_order_columns: true
+  matrixify_show_column_headers: true
+  matrixify_fit_columns_dynamically: true
+  matrixify_mode_rows: disabled
+  matrixify_dimension_selection_mode_rows: members
+  matrixify_dimension_rows:
+    dimension: ''
+    values: []
+  matrixify_topn_value_rows: 10
+  matrixify_all_sort_by_rows: a_to_z
+  matrixify_topn_order_rows: true
+  matrixify_show_row_labels: true
+  matrixify_row_height: 300
+  matrixify_charts_per_row: 4
+  matrixify_cell_title_template: ''
+  metric:
+    aggregate: null
+    column: null
+    datasourceWarning: false
+    expressionType: SQL
+    hasCustomLabel: false
+    label: SUM(amount_usd)
+    optionName: metric_bhjz50t753_2r1aeprpabi
+    sqlExpression: SUM(amount_usd)
+  adhoc_filters:
+  - clause: WHERE
+    comparator: No filter
+    expressionType: SIMPLE
+    operator: TEMPORAL_RANGE
+    subject: transaction_date
+  header_font_size: 0.4
+  subtitle_font_size: 0.15
+  show_metric_name: false
+  metric_name_font_size: 0.15
+  y_axis_format: SMART_NUMBER
+  currency_format:
+    symbol: USD
+    symbolPosition: prefix
+  time_format: smart_date
+  force_timestamp_formatting: false
+  conditional_formatting: []
+  extra_form_data: {}
+  dashboards:
+  - 10
+query_context: '{"datasource":{"id":24,"type":"table"},"force":false,"queries":[{"filters":[{"col":"transaction_date","op":"TEMPORAL_RANGE","val":"No
+  filter"}],"extras":{"having":"","where":""},"applied_time_extras":{},"columns":[],"metrics":[{"aggregate":null,"column":null,"datasourceWarning":false,"expressionType":"SQL","hasCustomLabel":false,"label":"SUM(amount_usd)","optionName":"metric_bhjz50t753_2r1aeprpabi","sqlExpression":"SUM(amount_usd)"}],"annotation_layers":[],"series_limit":0,"group_others_when_limit_reached":false,"order_desc":true,"url_params":{},"custom_params":{},"custom_form_data":{}}],"form_data":{"datasource":"24__table","viz_type":"big_number_total","slice_id":106,"matrixify_enable":false,"matrixify_mode_columns":"disabled","matrixify_dimension_selection_mode_columns":"members","matrixify_dimension_columns":{"dimension":"","values":[]},"matrixify_topn_value_columns":10,"matrixify_all_sort_by_columns":"a_to_z","matrixify_topn_order_columns":true,"matrixify_show_column_headers":true,"matrixify_fit_columns_dynamically":true,"matrixify_mode_rows":"disabled","matrixify_dimension_selection_mode_rows":"members","matrixify_dimension_rows":{"dimension":"","values":[]},"matrixify_topn_value_rows":10,"matrixify_all_sort_by_rows":"a_to_z","matrixify_topn_order_rows":true,"matrixify_show_row_labels":true,"matrixify_row_height":300,"matrixify_charts_per_row":4,"matrixify_cell_title_template":"","metric":{"aggregate":null,"column":null,"datasourceWarning":false,"expressionType":"SQL","hasCustomLabel":false,"label":"SUM(amount_usd)","optionName":"metric_bhjz50t753_2r1aeprpabi","sqlExpression":"SUM(amount_usd)"},"adhoc_filters":[{"clause":"WHERE","comparator":"No
+  filter","expressionType":"SIMPLE","operator":"TEMPORAL_RANGE","subject":"transaction_date"}],"header_font_size":0.4,"subtitle_font_size":0.15,"show_metric_name":false,"metric_name_font_size":0.15,"y_axis_format":"SMART_NUMBER","currency_format":{"symbol":"USD","symbolPosition":"prefix"},"time_format":"smart_date","force_timestamp_formatting":false,"conditional_formatting":[],"extra_form_data":{},"dashboards":[10],"force":false,"result_format":"json","result_type":"full"},"result_format":"json","result_type":"full"}'
+cache_timeout: null
+uuid: f9aa05e0-7907-44d5-b87a-9316b65eab40
+version: 1.0.0
+dataset_uuid: d0759dd7-6b84-4fae-9417-e59f485a8702

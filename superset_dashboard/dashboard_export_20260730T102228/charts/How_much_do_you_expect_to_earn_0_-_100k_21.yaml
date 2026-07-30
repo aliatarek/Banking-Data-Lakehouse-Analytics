@@ -1,0 +1,40 @@
+slice_name: How much do you expect to earn? ($0 - 100k)
+description: null
+certified_by: null
+certification_details: null
+viz_type: histogram_v2
+params:
+  adhoc_filters:
+  - clause: WHERE
+    comparator: Aspiring Developer
+    expressionType: SIMPLE
+    filterOptionName: filter_dfz5l631lx_lb7f2rlmjdl
+    isExtra: false
+    isNew: false
+    operator: ==
+    sqlExpression: null
+    subject: developer_type
+  - clause: WHERE
+    comparator: '200000'
+    expressionType: SIMPLE
+    filterOptionName: filter_6nmi4fk837u_6lvcpn3zzvf
+    isExtra: false
+    isNew: false
+    operator: <=
+    sqlExpression: null
+    subject: expected_earn
+  annotation_layers: []
+  color_scheme: supersetColors
+  column: expected_earn
+  datasource: 42__table
+  groupby: []
+  link_length: '10'
+  row_limit: null
+  slice_id: 1366
+  url_params: {}
+  viz_type: histogram_v2
+query_context: null
+cache_timeout: null
+uuid: 6d0ceb30-2008-d19c-d285-cf77dc764433
+version: 1.0.0
+dataset_uuid: d95a2865-53ce-1f82-a53d-8e3c89331469

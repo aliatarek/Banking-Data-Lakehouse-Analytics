@@ -1,0 +1,124 @@
+slice_name: New Customers per Month
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_line
+params:
+  datasource: 28__table
+  viz_type: echarts_timeseries_line
+  slice_id: 108
+  matrixify_enable: false
+  matrixify_mode_columns: disabled
+  matrixify_dimension_selection_mode_columns: members
+  matrixify_dimension_columns:
+    dimension: ''
+    values: []
+  matrixify_topn_value_columns: 10
+  matrixify_all_sort_by_columns: a_to_z
+  matrixify_topn_order_columns: true
+  matrixify_show_column_headers: true
+  matrixify_fit_columns_dynamically: true
+  matrixify_mode_rows: disabled
+  matrixify_dimension_selection_mode_rows: members
+  matrixify_dimension_rows:
+    dimension: ''
+    values: []
+  matrixify_topn_value_rows: 10
+  matrixify_all_sort_by_rows: a_to_z
+  matrixify_topn_order_rows: true
+  matrixify_show_row_labels: true
+  matrixify_row_height: 300
+  matrixify_charts_per_row: 4
+  matrixify_cell_title_template: ''
+  x_axis: acquisition_month
+  time_grain_sqla: P1M
+  xAxisForceCategorical: false
+  metrics:
+  - aggregate: SUM
+    column:
+      advanced_data_type: null
+      certification_details: null
+      certified_by: null
+      column_name: new_customers
+      description: null
+      expression: null
+      filterable: true
+      groupby: true
+      id: 769
+      is_certified: false
+      is_dttm: false
+      python_date_format: null
+      type: column
+      type_generic: 0
+      uuid: 91867426-67f2-4e47-88c5-f041bc59c51d
+      verbose_name: null
+      warning_markdown: null
+    datasourceWarning: false
+    expressionType: SIMPLE
+    hasCustomLabel: false
+    label: SUM(new_customers)
+    optionName: metric_er0ldkdtue_ao0f676ps0l
+    sqlExpression: null
+  groupby: []
+  adhoc_filters:
+  - clause: WHERE
+    comparator: No filter
+    expressionType: SIMPLE
+    operator: TEMPORAL_RANGE
+    subject: acquisition_month
+  row_limit: 10000
+  truncate_metric: true
+  show_empty_columns: true
+  time_compare_full_range: false
+  comparison_type: values
+  annotation_layers: []
+  forecastEnabled: false
+  forecastPeriods: 10
+  forecastInterval: 0.8
+  x_axis_title: ''
+  x_axis_title_margin: 40
+  y_axis_title: ''
+  y_axis_title_margin: 50
+  y_axis_title_position: Left
+  sort_series_type: sum
+  sort_series_ascending: false
+  color_scheme: supersetColors
+  show_value: false
+  area: false
+  markerEnabled: false
+  zoomable: false
+  minorTicks: false
+  show_legend: true
+  legendType: scroll
+  legendOrientation: top
+  x_axis_time_format: '%Y'
+  xAxisLabelRotation: 0
+  xAxisLabelInterval: auto
+  force_max_interval: false
+  rich_tooltip: true
+  showTooltipTotal: true
+  showTooltipPercentage: false
+  tooltipSortByMetric: false
+  tooltipTimeFormat: smart_date
+  y_axis_format: ~g
+  logAxis: false
+  minorSplitLine: false
+  truncateXAxis: true
+  xAxisBounds:
+  - null
+  - null
+  truncateYAxis: true
+  y_axis_bounds:
+  - 480
+  - 660
+  echart_options: '{}'
+  extra_form_data: {}
+  dashboards:
+  - 10
+query_context: '{"datasource":{"id":28,"type":"table"},"force":false,"queries":[{"filters":[{"col":"acquisition_month","op":"TEMPORAL_RANGE","val":"No
+  filter"}],"extras":{"time_grain_sqla":"P1M","having":"","where":""},"applied_time_extras":{},"columns":[{"timeGrain":"P1M","columnType":"BASE_AXIS","sqlExpression":"acquisition_month","label":"acquisition_month","expressionType":"SQL","isColumnReference":true}],"metrics":[{"aggregate":"SUM","column":{"advanced_data_type":null,"certification_details":null,"certified_by":null,"column_name":"new_customers","description":null,"expression":null,"filterable":true,"groupby":true,"id":769,"is_certified":false,"is_dttm":false,"python_date_format":null,"type":"column","type_generic":0,"uuid":"91867426-67f2-4e47-88c5-f041bc59c51d","verbose_name":null,"warning_markdown":null},"datasourceWarning":false,"expressionType":"SIMPLE","hasCustomLabel":false,"label":"SUM(new_customers)","optionName":"metric_er0ldkdtue_ao0f676ps0l","sqlExpression":null}],"orderby":[[{"aggregate":"SUM","column":{"advanced_data_type":null,"certification_details":null,"certified_by":null,"column_name":"new_customers","description":null,"expression":null,"filterable":true,"groupby":true,"id":769,"is_certified":false,"is_dttm":false,"python_date_format":null,"type":"column","type_generic":0,"uuid":"91867426-67f2-4e47-88c5-f041bc59c51d","verbose_name":null,"warning_markdown":null},"datasourceWarning":false,"expressionType":"SIMPLE","hasCustomLabel":false,"label":"SUM(new_customers)","optionName":"metric_er0ldkdtue_ao0f676ps0l","sqlExpression":null},false]],"annotation_layers":[],"row_limit":10000,"series_columns":[],"series_limit":0,"group_others_when_limit_reached":false,"order_desc":true,"url_params":{},"custom_params":{},"custom_form_data":{},"time_offsets":[],"time_compare_full_range":false,"post_processing":[{"operation":"pivot","options":{"index":["acquisition_month"],"columns":[],"aggregates":{"SUM(new_customers)":{"operator":"mean"}},"drop_missing_columns":false}},{"operation":"flatten"}]}],"form_data":{"datasource":"28__table","viz_type":"echarts_timeseries_line","slice_id":108,"matrixify_enable":false,"matrixify_mode_columns":"disabled","matrixify_dimension_selection_mode_columns":"members","matrixify_dimension_columns":{"dimension":"","values":[]},"matrixify_topn_value_columns":10,"matrixify_all_sort_by_columns":"a_to_z","matrixify_topn_order_columns":true,"matrixify_show_column_headers":true,"matrixify_fit_columns_dynamically":true,"matrixify_mode_rows":"disabled","matrixify_dimension_selection_mode_rows":"members","matrixify_dimension_rows":{"dimension":"","values":[]},"matrixify_topn_value_rows":10,"matrixify_all_sort_by_rows":"a_to_z","matrixify_topn_order_rows":true,"matrixify_show_row_labels":true,"matrixify_row_height":300,"matrixify_charts_per_row":4,"matrixify_cell_title_template":"","x_axis":"acquisition_month","time_grain_sqla":"P1M","xAxisForceCategorical":false,"metrics":[{"aggregate":"SUM","column":{"advanced_data_type":null,"certification_details":null,"certified_by":null,"column_name":"new_customers","description":null,"expression":null,"filterable":true,"groupby":true,"id":769,"is_certified":false,"is_dttm":false,"python_date_format":null,"type":"column","type_generic":0,"uuid":"91867426-67f2-4e47-88c5-f041bc59c51d","verbose_name":null,"warning_markdown":null},"datasourceWarning":false,"expressionType":"SIMPLE","hasCustomLabel":false,"label":"SUM(new_customers)","optionName":"metric_er0ldkdtue_ao0f676ps0l","sqlExpression":null}],"groupby":[],"adhoc_filters":[{"clause":"WHERE","comparator":"No
+  filter","expressionType":"SIMPLE","operator":"TEMPORAL_RANGE","subject":"acquisition_month"}],"row_limit":10000,"truncate_metric":true,"show_empty_columns":true,"time_compare_full_range":false,"comparison_type":"values","annotation_layers":[],"forecastEnabled":false,"forecastPeriods":10,"forecastInterval":0.8,"x_axis_title":"","x_axis_title_margin":40,"y_axis_title":"","y_axis_title_margin":50,"y_axis_title_position":"Left","sort_series_type":"sum","sort_series_ascending":false,"color_scheme":"supersetColors","show_value":false,"area":false,"markerEnabled":false,"zoomable":false,"minorTicks":false,"show_legend":true,"legendType":"scroll","legendOrientation":"top","x_axis_time_format":"%Y","xAxisLabelRotation":0,"xAxisLabelInterval":"auto","force_max_interval":false,"rich_tooltip":true,"showTooltipTotal":true,"showTooltipPercentage":false,"tooltipSortByMetric":false,"tooltipTimeFormat":"smart_date","y_axis_format":"~g","logAxis":false,"minorSplitLine":false,"truncateXAxis":true,"xAxisBounds":[null,null],"truncateYAxis":true,"y_axis_bounds":[480,660],"echart_options":"{}","extra_form_data":{},"dashboards":[10],"force":false,"result_format":"json","result_type":"full"},"result_format":"json","result_type":"full"}'
+cache_timeout: null
+uuid: 20c8b9be-16de-4710-a36c-65d8becc7414
+version: 1.0.0
+dataset_uuid: 41dfa801-7143-4b64-935a-5e697cf0e616

@@ -1,0 +1,67 @@
+slice_name: Total Deposits
+description: null
+certified_by: null
+certification_details: null
+viz_type: big_number_total
+params:
+  datasource: 23__table
+  viz_type: big_number_total
+  slice_id: 105
+  matrixify_enable: false
+  matrixify_mode_columns: disabled
+  matrixify_dimension_selection_mode_columns: members
+  matrixify_dimension_columns:
+    dimension: ''
+    values: []
+  matrixify_topn_value_columns: 10
+  matrixify_all_sort_by_columns: a_to_z
+  matrixify_topn_order_columns: true
+  matrixify_show_column_headers: true
+  matrixify_fit_columns_dynamically: true
+  matrixify_mode_rows: disabled
+  matrixify_dimension_selection_mode_rows: members
+  matrixify_dimension_rows:
+    dimension: ''
+    values: []
+  matrixify_topn_value_rows: 10
+  matrixify_all_sort_by_rows: a_to_z
+  matrixify_topn_order_rows: true
+  matrixify_show_row_labels: true
+  matrixify_row_height: 300
+  matrixify_charts_per_row: 4
+  matrixify_cell_title_template: ''
+  metric:
+    aggregate: null
+    column: null
+    datasourceWarning: false
+    expressionType: SQL
+    hasCustomLabel: false
+    label: SUM(balance_usd)
+    optionName: metric_0htbnhwcygqv_hnde4sebu3r
+    sqlExpression: SUM(balance_usd)
+  adhoc_filters:
+  - clause: WHERE
+    comparator: No filter
+    expressionType: SIMPLE
+    operator: TEMPORAL_RANGE
+    subject: snapshot_date
+  header_font_size: 0.4
+  subtitle_font_size: 0.15
+  show_metric_name: false
+  y_axis_format: SMART_NUMBER
+  currency_format:
+    symbol: USD
+    symbolPosition: prefix
+  time_format: smart_date
+  force_timestamp_formatting: false
+  conditional_formatting: []
+  extra_form_data: {}
+  dashboards:
+  - 10
+query_context: '{"datasource":{"id":23,"type":"table"},"force":false,"queries":[{"filters":[{"col":"snapshot_date","op":"TEMPORAL_RANGE","val":"No
+  filter"}],"extras":{"having":"","where":""},"applied_time_extras":{},"columns":[],"metrics":[{"aggregate":null,"column":null,"datasourceWarning":false,"expressionType":"SQL","hasCustomLabel":false,"label":"SUM(balance_usd)","optionName":"metric_0htbnhwcygqv_hnde4sebu3r","sqlExpression":"SUM(balance_usd)"}],"annotation_layers":[],"series_limit":0,"group_others_when_limit_reached":false,"order_desc":true,"url_params":{},"custom_params":{},"custom_form_data":{}}],"form_data":{"datasource":"23__table","viz_type":"big_number_total","slice_id":105,"matrixify_enable":false,"matrixify_mode_columns":"disabled","matrixify_dimension_selection_mode_columns":"members","matrixify_dimension_columns":{"dimension":"","values":[]},"matrixify_topn_value_columns":10,"matrixify_all_sort_by_columns":"a_to_z","matrixify_topn_order_columns":true,"matrixify_show_column_headers":true,"matrixify_fit_columns_dynamically":true,"matrixify_mode_rows":"disabled","matrixify_dimension_selection_mode_rows":"members","matrixify_dimension_rows":{"dimension":"","values":[]},"matrixify_topn_value_rows":10,"matrixify_all_sort_by_rows":"a_to_z","matrixify_topn_order_rows":true,"matrixify_show_row_labels":true,"matrixify_row_height":300,"matrixify_charts_per_row":4,"matrixify_cell_title_template":"","metric":{"aggregate":null,"column":null,"datasourceWarning":false,"expressionType":"SQL","hasCustomLabel":false,"label":"SUM(balance_usd)","optionName":"metric_0htbnhwcygqv_hnde4sebu3r","sqlExpression":"SUM(balance_usd)"},"adhoc_filters":[{"clause":"WHERE","comparator":"No
+  filter","expressionType":"SIMPLE","operator":"TEMPORAL_RANGE","subject":"snapshot_date"}],"header_font_size":0.4,"subtitle_font_size":0.15,"show_metric_name":false,"y_axis_format":"SMART_NUMBER","currency_format":{"symbol":"USD","symbolPosition":"prefix"},"time_format":"smart_date","force_timestamp_formatting":false,"conditional_formatting":[],"extra_form_data":{},"dashboards":[10],"force":false,"result_format":"json","result_type":"full"},"result_format":"json","result_type":"full"}'
+cache_timeout: null
+uuid: a9a8c954-a5e7-4961-ab7f-5c3ed026399f
+version: 1.0.0
+dataset_uuid: 09f2f259-6750-49ef-8744-726a1868d000
