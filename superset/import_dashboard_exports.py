@@ -3,11 +3,16 @@
 export or a full-instance export containing multiple dashboards/charts/
 datasets/databases (as Superset's "Export all" produces) — either shape is
 handled the same way, since Superset's importer matches every object by
-UUID with ``overwrite=True``: known objects (e.g. the team's "Banking-
-Analytics" dashboard) update in place on every re-drop, and anything new
-(e.g. Superset's own bundled sample dashboards, if a teammate drops a full-
-instance export) is just created as its own separate dashboard — harmless
-clutter, never merged into the team's dashboard.
+UUID with ``overwrite=True``: known objects update in place on every
+re-drop, and anything new (e.g. Superset's own bundled sample dashboards, if
+a teammate drops a full-instance export) is created as its own dashboard.
+
+After importing, every dashboard is folded onto the one team dashboard
+(TARGET_DASHBOARD_TITLE below) and removed — see
+``_consolidate_into_target_dashboard``. So it doesn't matter what a dropped
+export's own dashboard is named or which UUID it carries (a teammate
+exporting a fresh, untitled dashboard of charts still ends up merged in);
+the only thing that matters is which *charts* it brought.
 
 Safe to re-run on every container start and on every poll cycle.
 """
@@ -15,6 +20,7 @@ Safe to re-run on every container start and on every poll cycle.
 from __future__ import annotations
 
 import glob
+import json
 import logging
 import os
 from zipfile import ZipFile
@@ -24,6 +30,10 @@ import yaml
 logger = logging.getLogger("superset_bootstrap")
 
 EXPORTS_DIR = "/app/superset_dashboard"
+
+# The one dashboard everything gets consolidated onto, regardless of what a
+# dropped export's own dashboard is titled.
+TARGET_DASHBOARD_TITLE = "Banking-Analytics"
 
 # Superset ships a built-in "examples" database (its own sample dashboards'
 # data source) whose connection (typically a sibling "db" host from the
@@ -98,6 +108,7 @@ def _strip_incompatible_fields(contents: dict[str, str]) -> dict[str, str]:
         if key.startswith("dashboards/") and key.endswith(".yaml"):
             data = yaml.safe_load(contents[key])
             data.pop("theme_uuid", None)
+            (data.get("metadata") or {}).pop("chart_customization_config", None)
             contents[key] = yaml.dump(data)
     return contents
 
@@ -119,8 +130,79 @@ def _import_one(path: str, db_password: str) -> None:
     logger.info("Imported bundle: %s", os.path.basename(path))
 
 
+def _build_position_json(charts: list) -> str:
+    position = {
+        "DASHBOARD_VERSION_KEY": "v2",
+        "ROOT_ID": {"type": "ROOT", "id": "ROOT_ID", "children": ["GRID_ID"]},
+        "GRID_ID": {"type": "GRID", "id": "GRID_ID", "children": [], "parents": ["ROOT_ID"]},
+    }
+    for index, chart in enumerate(charts):
+        chart_holder_id = f"CHART-{chart.id}"
+        row_id = f"ROW-{index}"
+        position[row_id] = {
+            "type": "ROW",
+            "id": row_id,
+            "children": [chart_holder_id],
+            "parents": ["ROOT_ID", "GRID_ID"],
+            "meta": {"background": "BACKGROUND_TRANSPARENT"},
+        }
+        position[chart_holder_id] = {
+            "type": "CHART",
+            "id": chart_holder_id,
+            "children": [],
+            "parents": ["ROOT_ID", "GRID_ID", row_id],
+            "meta": {"chartId": chart.id, "width": 4, "height": 50, "sliceName": chart.slice_name},
+        }
+        position["GRID_ID"]["children"].append(row_id)
+    position["DASHBOARD_CHART_TYPE"] = "CHART"
+    return json.dumps(position)
+
+
+def _consolidate_into_target_dashboard() -> None:
+    """Fold every dashboard's charts onto TARGET_DASHBOARD_TITLE and delete
+    the rest, so a dropped export's own dashboard title/UUID never matters."""
+    from superset import db as flask_db
+    from superset.models.dashboard import Dashboard
+
+    session = flask_db.session
+    all_dashboards = session.query(Dashboard).order_by(Dashboard.id).all()
+    if not all_dashboards:
+        return
+
+    target = next((d for d in all_dashboards if d.dashboard_title == TARGET_DASHBOARD_TITLE), None)
+    renamed = False
+    if target is None:
+        target = all_dashboards[0]
+        logger.info("No dashboard named %r yet; promoting dashboard %d.", TARGET_DASHBOARD_TITLE, target.id)
+        target.dashboard_title = TARGET_DASHBOARD_TITLE
+        renamed = True
+
+    others = [d for d in all_dashboards if d.id != target.id]
+    if not others:
+        if renamed:
+            session.commit()
+        return
+
+    existing_ids = {s.id for s in target.slices}
+    merged = list(target.slices)
+    for other in others:
+        for chart in other.slices:
+            if chart.id not in existing_ids:
+                merged.append(chart)
+                existing_ids.add(chart.id)
+        session.delete(other)
+
+    target.slices = merged
+    target.position_json = _build_position_json(merged)
+    session.commit()
+    logger.info(
+        "Consolidated %d extra dashboard(s) into %r (%d chart(s) total).",
+        len(others), TARGET_DASHBOARD_TITLE, len(merged),
+    )
+
+
 def import_all() -> None:
-    """Import every .zip in EXPORTS_DIR."""
+    """Import every .zip in EXPORTS_DIR, then consolidate onto one dashboard."""
     from flask import g
     from flask_appbuilder.security.sqla.models import User
     from superset import db as flask_db
@@ -134,6 +216,11 @@ def import_all() -> None:
             _import_one(path, db_password)
         except Exception:
             logger.exception("Failed to import bundle: %s", os.path.basename(path))
+
+    try:
+        _consolidate_into_target_dashboard()
+    except Exception:
+        logger.exception("Failed to consolidate dashboards.")
 
 
 if __name__ == "__main__":
