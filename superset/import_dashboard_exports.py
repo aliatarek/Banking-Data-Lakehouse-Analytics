@@ -108,6 +108,7 @@ def _strip_incompatible_fields(contents: dict[str, str]) -> dict[str, str]:
         if key.startswith("dashboards/") and key.endswith(".yaml"):
             data = yaml.safe_load(contents[key])
             data.pop("theme_uuid", None)
+            (data.get("metadata") or {}).pop("chart_customization_config", None)
             contents[key] = yaml.dump(data)
     return contents
 
