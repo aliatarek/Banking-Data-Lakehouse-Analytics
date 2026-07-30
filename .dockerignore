@@ -1,0 +1,7 @@
+.git
+.env
+dbt/target
+dbt/logs
+dbt/dbt_packages
+EDA
+**/__pycache__

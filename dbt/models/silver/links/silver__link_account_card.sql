@@ -6,18 +6,18 @@
 with source_data as (
 
     select
-        customer_id,
         account_id,
+        card_id,
         _source
-    from {{ ref('bronze__accounts') }}
+    from {{ ref('bronze__cards') }}
 
 ),
 
 hashed as (
 
     select
-        {{ hash_key('customer_id') }} as hk_customer,
         {{ hash_key('account_id') }} as hk_account,
+        {{ hash_key('card_id') }} as hk_card,
         current_timestamp as load_dts,
         _source as rec_src
     from source_data
@@ -27,9 +27,9 @@ hashed as (
 hashed_link as (
 
     select
-        {{ link_hash_key(['hk_customer', 'hk_account']) }} as hk_link_customer_account,
-        hk_customer,
+        {{ link_hash_key(['hk_account', 'hk_card']) }} as hk_link_account_card,
         hk_account,
+        hk_card,
         load_dts,
         rec_src
     from hashed
@@ -39,25 +39,28 @@ hashed_link as (
 deduped as (
 
     select
-        hk_link_customer_account,
-        hk_customer,
+        hk_link_account_card,
         hk_account,
+        hk_card,
         load_dts,
         rec_src,
-        row_number() over (partition by hk_link_customer_account order by load_dts) as rn
+        row_number() over (partition by hk_link_account_card order by load_dts) as rn
     from hashed_link
 
 )
 
 select
-    hk_link_customer_account,
-    hk_customer,
+    hk_link_account_card,
     hk_account,
+    hk_card,
     load_dts,
     rec_src
 from deduped
 where rn = 1
 
 {% if is_incremental() %}
-  and hk_link_customer_account not in (select hk_link_customer_account from {{ this }})
+  and not exists (
+    select 1 from {{ this }} existing
+    where existing.hk_link_account_card = deduped.hk_link_account_card
+  )
 {% endif %}

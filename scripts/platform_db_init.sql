@@ -1,0 +1,3 @@
+-- Runs once when the platform-db container's data volume is first created.
+-- Airflow's own metadata lives in the default POSTGRES_DB ("airflow"). Superset's
+-- metadata is stored on the shared Railway instance instead (see .env.example).

@@ -3,5 +3,6 @@ target/
 dbt_packages/
 logs/
 .env
+__pycache__/
 profiles.yml
 .user.yml

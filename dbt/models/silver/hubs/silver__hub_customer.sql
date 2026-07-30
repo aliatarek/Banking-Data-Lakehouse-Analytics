@@ -6,17 +6,17 @@
 with source_data as (
 
     select
-        branch_id,
+        customer_id,
         _source
-    from {{ ref('bronze__branches') }}
+    from {{ ref('bronze__customers') }}
 
 ),
 
 hashed as (
 
     select
-        {{ hash_key('branch_id') }} as hk_branch,
-        branch_id,
+        {{ hash_key('customer_id') }} as hk_customer,
+        customer_id,
         current_timestamp as load_dts,
         _source as rec_src
     from source_data
@@ -26,23 +26,26 @@ hashed as (
 deduped as (
 
     select
-        hk_branch,
-        branch_id,
+        hk_customer,
+        customer_id,
         load_dts,
         rec_src,
-        row_number() over (partition by hk_branch order by load_dts) as rn
+        row_number() over (partition by hk_customer order by load_dts) as rn
     from hashed
 
 )
 
 select
-    hk_branch,
-    branch_id,
+    hk_customer,
+    customer_id,
     load_dts,
     rec_src
 from deduped
 where rn = 1
 
 {% if is_incremental() %}
-  and hk_branch not in (select hk_branch from {{ this }})
+  and not exists (
+    select 1 from {{ this }} existing
+    where existing.hk_customer = deduped.hk_customer
+  )
 {% endif %}

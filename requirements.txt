@@ -1,0 +1,5 @@
+# Local development tooling only (running `dbt` from your own machine
+# against dbt/). The Airflow and Superset containers install their own
+# dependencies from airflow/requirements.txt and their Dockerfiles.
+dbt-core==1.12.0
+dbt-postgres==1.11.0
