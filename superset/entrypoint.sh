@@ -15,7 +15,9 @@ superset init
 
 python /app/bootstrap.py bootstrap
 
-python /app/sync_reporting_tables.py &
+python /app/import_dashboard_exports.py
+
+python /app/watch_dashboard_exports.py &
 
 exec gunicorn \
   --bind "0.0.0.0:8088" \

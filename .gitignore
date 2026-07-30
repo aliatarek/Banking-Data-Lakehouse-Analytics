@@ -6,3 +6,4 @@ logs/
 __pycache__/
 profiles.yml
 .user.yml
+superset_dashboard/*.zip
